@@ -1,10 +1,10 @@
 // src/components/Product/Product.jsx
 import React, { useEffect, useState } from "react";
-import { FaShoppingCart } from "react-icons/fa";
+import { FaShoppingCart, FaTag } from "react-icons/fa";
+import { MdCategory } from "react-icons/md";
 import "./Product.css";
 import { fetchProducts } from "../../services/api";
 import { useOutletContext } from 'react-router-dom';
-import { useCart } from '../../context/CartContext';
 
 // Rupiah formatting function
 const formatRupiah = (number) => {
@@ -17,65 +17,65 @@ const Product = () => {
   const [productList, setProductList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [localSelectedTag, setLocalSelectedTag] = useState(selectedTag);
-  const { addToCart: addToCartContext } = useCart();
-
-  const filteredProducts = localSelectedTag && productList.length > 0
-    ? productList.filter((product) => 
-        product.tags && product.tags.some(tag => 
-          (typeof tag === 'object' ? tag._id : tag) === localSelectedTag
-        )
-      ) 
-    : productList;
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [tags, setTags] = useState([]);
 
   useEffect(() => {
-    const getProducts = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetchProducts();
-        const data = await response.json();
-        setProductList(data.data || []);
+        // Fetch products
+        const productsResponse = await fetch('http://localhost:8000/api/products');
+        const productsData = await productsResponse.json();
+        setProductList(productsData.data || []);
+
+        // Fetch categories
+        const categoriesResponse = await fetch('http://localhost:8000/api/categories');
+        const categoriesData = await categoriesResponse.json();
+        setCategories(categoriesData || []);
+
+        // Fetch tags
+        const tagsResponse = await fetch('http://localhost:8000/api/tags');
+        const tagsData = await tagsResponse.json();
+        setTags(tagsData || []);
+
         setError(null);
       } catch (err) {
-        console.error('Error fetching products:', err);
-        setError('Failed to load products');
+        console.error('Error fetching data:', err);
+        setError('Failed to load data');
       } finally {
         setLoading(false);
       }
     };
     
-    getProducts();
+    fetchData();
   }, []);
 
-  useEffect(() => {
-    setLocalSelectedTag(selectedTag);
-  }, [selectedTag]);
+  const handleCategoryClick = (categoryId) => {
+    setSelectedCategory(categoryId === selectedCategory ? null : categoryId);
+  };
+
+  const handleTagClick = (tagId) => {
+    setSelectedTags(prev => {
+      if (prev.includes(tagId)) {
+        return prev.filter(id => id !== tagId);
+      }
+      return [...prev, tagId];
+    });
+  };
+
+  const filteredProducts = productList.filter(product => {
+    const categoryMatch = !selectedCategory || product.category?._id === selectedCategory;
+    const tagsMatch = selectedTags.length === 0 || 
+      (product.tags && product.tags.some(tag => selectedTags.includes(tag._id)));
+    return categoryMatch && tagsMatch;
+  });
 
   const handleAddToCart = (product) => {
-    addToCartContext(product);
-    // Show some feedback to the user
+    // Implement cart functionality
     alert(`${product.name} added to cart!`);
-  };
-
-  const handleTagClick = (tagId, tagName) => {
-    setLocalSelectedTag(tagId === localSelectedTag ? null : tagId);
-  };
-
-  const renderTag = (tag) => {
-    if (!tag) return null;
-    // Handle both object tags and string tag IDs
-    const tagId = typeof tag === 'object' ? tag._id : tag;
-    const tagName = typeof tag === 'object' ? tag.name : tag;
-    
-    return (
-      <button 
-        key={tagId} 
-        className={`tag-button ${localSelectedTag === tagId ? 'active' : ''}`}
-        onClick={() => handleTagClick(tagId, tagName)}
-      >
-        {tagName}
-      </button>
-    );
   };
 
   if (loading) {
@@ -88,34 +88,78 @@ const Product = () => {
 
   return (
     <div className="product-container">
-      <h2>Products {localSelectedTag && `- ${localSelectedTag}`}</h2>
+      <div className="filters-section">
+        <div className="filter-group">
+          <h3><MdCategory /> Categories</h3>
+          <div className="filter-buttons">
+            {categories.map(category => (
+              <button
+                key={category._id}
+                className={`filter-chip ${selectedCategory === category._id ? 'active' : ''}`}
+                onClick={() => handleCategoryClick(category._id)}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="filter-group">
+          <h3><FaTag /> Tags</h3>
+          <div className="filter-buttons">
+            {tags.map(tag => (
+              <button
+                key={tag._id}
+                className={`filter-chip ${selectedTags.includes(tag._id) ? 'active' : ''}`}
+                onClick={() => handleTagClick(tag._id)}
+              >
+                {tag.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div className="product-grid">
         {filteredProducts.map((product) => (
           <div className="product-card" key={product._id}>
-            <img 
-              src={product.image_url || "https://via.placeholder.com/100"} 
-              alt={product.name} 
-              className="product-image"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = '/placeholder.png';
-              }}
-            />
+            <div className="product-image-container">
+              <img 
+                src={product.image_url || "/placeholder.png"} 
+                alt={product.name} 
+                className="product-image"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = '/placeholder.png';
+                }}
+              />
+              <div className="product-badges">
+                {product.category && (
+                  <span className="category-badge">
+                    {product.category.name}
+                  </span>
+                )}
+                {product.tags && product.tags.map(tag => (
+                  <span key={tag._id} className="tag-badge">
+                    {tag.name}
+                  </span>
+                ))}
+              </div>
+            </div>
             <div className="product-details">
               <h3 className="product-name">{product.name}</h3>
               <p className="product-description">
                 {product.description || ""}
               </p>
-              <div className="product-tags">
-                {product.tags && Array.isArray(product.tags) && product.tags.map(tag => renderTag(tag))}
+              <div className="product-footer">
+                <span className="product-price">{formatRupiah(product.price)}</span>
+                <button 
+                  className="add-to-cart-button" 
+                  onClick={() => handleAddToCart(product)}
+                >
+                  <FaShoppingCart /> Add to Cart
+                </button>
               </div>
-              <p className="product-price">{formatRupiah(product.price)}</p>
-              <button 
-                className="add-to-cart-button" 
-                onClick={() => handleAddToCart(product)}
-              >
-                <FaShoppingCart /> Add to Cart
-              </button>
             </div>
           </div>
         ))}
