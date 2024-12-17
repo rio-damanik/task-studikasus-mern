@@ -1,0 +1,85 @@
+.order-container {
+  max-width: 600px;
+  margin: 50px auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.order-container h2 {
+  margin-bottom: 20px;
+  font-size: 24px;
+  color: #333;
+}
+
+.order-list {
+  margin-bottom: 20px;
+}
+
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.order-item:last-child {
+  border-bottom: none;
+}
+
+.order-details {
+  text-align: left;
+}
+
+.order-details h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #555;
+}
+
+.order-details p {
+  margin: 5px 0 0;
+  font-size: 14px;
+  color: #888;
+}
+
+.order-total {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+}
+
+.order-summary {
+  margin-top: 20px;
+}
+
+.order-summary h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.checkout-button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.checkout-button:hover {
+  background-color: #218838;
+}
+
+.empty-message {
+  font-size: 18px;
+  color: #666;
+  margin-top: 20px;
+}

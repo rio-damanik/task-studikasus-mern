@@ -1,0 +1,161 @@
+/* General styling for the invoice container */
+.invoice-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 90%;
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Header styling */
+.invoice-container h2 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+/* Styling for the address and summary sections */
+.invoice-details {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.invoice-recipient,
+.invoice-address,
+.invoice-summary {
+  flex: 1;
+  margin-right: 20px;
+}
+
+/* Recipient Section Styling */
+.invoice-recipient h3 {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.invoice-recipient p {
+  font-size: 14px;
+  color: #555;
+  margin: 5px 0;
+  line-height: 1.5;
+}
+
+/* Invoice Address Styling */
+.invoice-address h3 {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.invoice-address p {
+  font-size: 14px;
+  color: #555;
+  margin: 5px 0;
+  line-height: 1.5;
+}
+
+/* Invoice Summary Styling */
+.invoice-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.summary-item span {
+  font-size: 16px;
+}
+
+.summary-item.total {
+  font-weight: bold;
+  font-size: 18px;
+  border-top: 2px solid #ddd;
+  padding-top: 10px;
+  margin-top: 10px;
+}
+
+/* Styling for time display */
+.summary-item span:first-child {
+  font-weight: bold;
+  color: #333;
+  min-width: 120px;
+  display: inline-block;
+}
+
+.summary-item span:last-child {
+  color: #666;
+}
+
+/* Styling for the order items section */
+.invoice-items {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.invoice-items h3 {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.invoice-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.item-details {
+  display: flex;
+  justify-content: space-between;
+  width: 60%;
+}
+
+.item-name {
+  font-size: 14px;
+  color: #555;
+}
+
+.item-quantity {
+  font-size: 14px;
+  color: #555;
+}
+
+.item-price {
+  font-size: 16px;
+  color: #333;
+  font-weight: bold;
+}
+
+/* Button Styling */
+.invoice-button {
+  margin-top: 20px;
+  padding: 12px 24px;
+  font-size: 16px;
+  color: #fff;
+  background-color: #4caf50;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.invoice-button:hover {
+  background-color: #45a049;
+}
