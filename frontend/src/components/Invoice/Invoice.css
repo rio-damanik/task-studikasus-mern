@@ -1,161 +1,196 @@
-/* General styling for the invoice container */
 .invoice-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 90%;
   max-width: 800px;
-  margin: 20px auto;
-  padding: 20px;
-  border: 1px solid #ccc;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #ffffff;
   border-radius: 8px;
-  background-color: #fff;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Header styling */
-.invoice-container h2 {
-  font-size: 24px;
+.invoice-content {
+  padding: 2rem;
+}
+
+.invoice-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #eee;
+}
+
+.invoice-header h1 {
   color: #333;
-  margin-bottom: 20px;
+  margin-bottom: 1rem;
+  font-size: 2rem;
 }
 
-/* Styling for the address and summary sections */
-.invoice-details {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  margin-bottom: 20px;
-}
-
-.invoice-recipient,
-.invoice-address,
-.invoice-summary {
-  flex: 1;
-  margin-right: 20px;
-}
-
-/* Recipient Section Styling */
-.invoice-recipient h3 {
-  font-size: 18px;
-  color: #333;
-  margin-bottom: 10px;
-}
-
-.invoice-recipient p {
-  font-size: 14px;
-  color: #555;
-  margin: 5px 0;
+.invoice-info {
+  color: #666;
   line-height: 1.5;
 }
 
-/* Invoice Address Styling */
-.invoice-address h3 {
-  font-size: 18px;
+.delivery-info {
+  margin: 2rem 0;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.delivery-info h2 {
   color: #333;
-  margin-bottom: 10px;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
 }
 
-.invoice-address p {
-  font-size: 14px;
-  color: #555;
-  margin: 5px 0;
-  line-height: 1.5;
+.address {
+  color: #666;
+  line-height: 1.6;
 }
 
-/* Invoice Summary Styling */
-.invoice-summary {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+.order-items {
+  margin: 2rem 0;
 }
 
-.summary-item {
-  display: flex;
-  justify-content: space-between;
+.order-items h2 {
+  color: #333;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+table {
   width: 100%;
-  margin-bottom: 10px;
+  border-collapse: collapse;
+  margin: 1rem 0;
 }
 
-.summary-item span {
-  font-size: 16px;
+th, td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #dee2e6;
 }
 
-.summary-item.total {
-  font-weight: bold;
-  font-size: 18px;
-  border-top: 2px solid #ddd;
-  padding-top: 10px;
-  margin-top: 10px;
-}
-
-/* Styling for time display */
-.summary-item span:first-child {
-  font-weight: bold;
+th {
+  background-color: #f8f9fa;
+  font-weight: 600;
   color: #333;
-  min-width: 120px;
-  display: inline-block;
 }
 
-.summary-item span:last-child {
+td {
   color: #666;
 }
 
-/* Styling for the order items section */
-.invoice-items {
-  width: 100%;
-  margin-top: 20px;
-}
-
-.invoice-items h3 {
-  font-size: 18px;
-  color: #333;
-  margin-bottom: 10px;
-}
-
-.invoice-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid #f1f1f1;
-}
-
-.item-details {
-  display: flex;
-  justify-content: space-between;
-  width: 60%;
-}
-
-.item-name {
-  font-size: 14px;
-  color: #555;
-}
-
-.item-quantity {
-  font-size: 14px;
-  color: #555;
-}
-
-.item-price {
-  font-size: 16px;
-  color: #333;
-  font-weight: bold;
-}
-
-/* Button Styling */
-.invoice-button {
-  margin-top: 20px;
-  padding: 12px 24px;
-  font-size: 16px;
-  color: #fff;
-  background-color: #4caf50;
-  border: none;
+.invoice-summary {
+  margin: 2rem 0;
+  padding: 1rem;
+  background-color: #f8f9fa;
   border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.3s;
 }
 
-.invoice-button:hover {
-  background-color: #45a049;
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  color: #666;
+}
+
+.summary-row.total {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 2px solid #dee2e6;
+  font-weight: bold;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.invoice-footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 2px solid #eee;
+  text-align: center;
+}
+
+.invoice-footer p {
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.print-button,
+.back-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.print-button {
+  background-color: #28a745;
+  color: white;
+}
+
+.print-button:hover {
+  background-color: #218838;
+}
+
+.back-button {
+  background-color: #6c757d;
+  color: white;
+}
+
+.back-button:hover {
+  background-color: #5a6268;
+}
+
+.loading,
+.error {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.error {
+  color: #dc3545;
+}
+
+@media print {
+  .invoice-container {
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .actions {
+    display: none;
+  }
+
+  @page {
+    margin: 0.5cm;
+  }
+}
+
+@media (max-width: 768px) {
+  .invoice-container {
+    margin: 1rem;
+    padding: 1rem;
+  }
+
+  .invoice-content {
+    padding: 1rem;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .print-button,
+  .back-button {
+    width: 100%;
+  }
 }

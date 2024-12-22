@@ -1,127 +1,153 @@
-import React, { useState } from "react";
-import "./Invoice.css";
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import axios from 'axios';
+import './Invoice.css';
 
 // Helper function to format numbers as Rupiah currency
 const formatRupiah = (number) => {
-  return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(number);
-};
-
-// Helper function to format ISO date string to a readable format
-const formatDateTime = (isoString) => {
-  const date = new Date(isoString);
-  return new Intl.DateTimeFormat('id-ID', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    timeZoneName: 'short'
-  }).format(date);
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR'
+  }).format(number);
 };
 
 const Invoice = () => {
-  // Mock invoice data with recipient's name and timestamp
-  const [invoice, setInvoice] = useState({
-    delivery_fee: 20000,
-    metode_payment: "transfer",
-    recipient_name: "John Doe",
-    created_at: "2024-12-15T20:44:17+07:00", // Using the provided timestamp
-    delivery_address: {
-      kelurahan: "Kelurahan A",
-      kecamatan: "Kecamatan B",
-      kabupaten: "Kabupaten C",
-      provinsi: "Provinsi D",
-      detail: "Jalan Raya No. 123, Blok D",
-    },
-    order: {
-      orderItems: [
-        {
-          _id: "1",
-          product: { name: "Burger", price: 20000 },
-          quantity: 2,
-        },
-        {
-          _id: "2",
-          product: { name: "Cake", price: 15000 },
-          quantity: 1,
-        },
-        {
-          _id: "3",
-          product: { name: "Coffee", price: 10000 },
-          quantity: 3,
-        },
-      ],
-    },
-  });
+  const { orderId } = useParams();
+  const navigate = useNavigate();
+  const { token } = useAuth();
+  const [invoice, setInvoice] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Calculate subtotal based on order items
-  const calculateSubtotal = () => {
-    return invoice.order.orderItems.reduce((total, item) => total + item.product.price * item.quantity, 0);
-  };
+  useEffect(() => {
+    const fetchInvoice = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8000/api/order/${orderId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setInvoice(response.data);
+      } catch (err) {
+        setError('Failed to load invoice');
+        console.error('Error fetching invoice:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Calculate total including delivery fee
-  const calculateTotal = () => {
-    return calculateSubtotal() + invoice.delivery_fee;
+    fetchInvoice();
+  }, [orderId, token]);
+
+  if (loading) {
+    return (
+      <div className="invoice-container">
+        <div className="loading">Loading invoice...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="invoice-container">
+        <div className="error">{error}</div>
+        <button onClick={() => navigate('/')} className="back-button">
+          Back to Home
+        </button>
+      </div>
+    );
+  }
+
+  if (!invoice) {
+    return (
+      <div className="invoice-container">
+        <div className="error">Invoice not found</div>
+        <button onClick={() => navigate('/')} className="back-button">
+          Back to Home
+        </button>
+      </div>
+    );
+  }
+
+  const handlePrint = () => {
+    window.print();
   };
 
   return (
     <div className="invoice-container">
-      <h2>Invoice</h2>
-
-      <div className="invoice-details">
-        {/* Displaying the recipient's name */}
-        <div className="invoice-recipient">
-          <h3>Recipient</h3>
-          <p>{invoice.recipient_name}</p>
+      <div className="invoice-content">
+        <div className="invoice-header">
+          <h1>Invoice</h1>
+          <div className="invoice-info">
+            <p>Order ID: #{invoice.order_number}</p>
+            <p>Date: {new Date(invoice.createdAt).toLocaleDateString()}</p>
+            <p>Status: {invoice.status}</p>
+          </div>
         </div>
 
-        <div className="invoice-address">
-          <h3>Delivery Address</h3>
-          <p>{invoice.delivery_address.detail}</p>
-          <p>
-            {invoice.delivery_address.kelurahan}, {invoice.delivery_address.kecamatan}, {invoice.delivery_address.kabupaten}, {invoice.delivery_address.provinsi}
-          </p>
+        <div className="delivery-info">
+          <h2>Delivery Information</h2>
+          <div className="address">
+            <p>{invoice.delivery_address.detail}</p>
+            <p>
+              {invoice.delivery_address.kelurahan}, {invoice.delivery_address.kecamatan}
+            </p>
+            <p>
+              {invoice.delivery_address.kabupaten}, {invoice.delivery_address.provinsi}
+            </p>
+          </div>
+        </div>
+
+        <div className="order-items">
+          <h2>Order Items</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {invoice.orderItems.map((item, index) => (
+                <tr key={index}>
+                  <td>{item.name}</td>
+                  <td>{item.qty}</td>
+                  <td>{formatRupiah(item.price)}</td>
+                  <td>{formatRupiah(item.price * item.qty)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
         <div className="invoice-summary">
-          <div className="summary-item">
+          <div className="summary-row">
             <span>Subtotal:</span>
-            <span>{formatRupiah(calculateSubtotal())}</span>
+            <span>{formatRupiah(invoice.sub_total)}</span>
           </div>
-          <div className="summary-item">
+          <div className="summary-row">
             <span>Delivery Fee:</span>
             <span>{formatRupiah(invoice.delivery_fee)}</span>
           </div>
-          <div className="summary-item total">
+          <div className="summary-row total">
             <span>Total:</span>
-            <span>{formatRupiah(calculateTotal())}</span>
+            <span>{formatRupiah(invoice.total)}</span>
           </div>
-          <div className="summary-item">
-            <span>Payment Method:</span>
-            <span>{invoice.metode_payment === "tunai" ? "Cash" : "Transfer"}</span>
-          </div>
-          <div className="summary-item">
-            <span>Created At:</span>
-            <span>{formatDateTime(invoice.created_at)}</span>
+        </div>
+
+        <div className="invoice-footer">
+          <p>Payment Method: {invoice.metode_payment}</p>
+          <div className="actions">
+            <button onClick={handlePrint} className="print-button">
+              Print Invoice
+            </button>
+            <button onClick={() => navigate('/')} className="back-button">
+              Back to Home
+            </button>
           </div>
         </div>
       </div>
-
-      <div className="invoice-items">
-        <h3>Order Items</h3>
-        {invoice.order.orderItems.map((item) => (
-          <div className="invoice-item" key={item._id}>
-            <div className="item-details">
-              <span className="item-name">{item.product.name}</span>
-              <span className="item-quantity">x{item.quantity}</span>
-            </div>
-            <div className="item-price">{formatRupiah(item.product.price * item.quantity)}</div>
-          </div>
-        ))}
-      </div>
-
-      <button className="invoice-button">Confirm Order</button>
     </div>
   );
 };

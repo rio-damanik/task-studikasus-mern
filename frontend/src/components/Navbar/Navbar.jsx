@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaHome, FaShoppingCart, FaUser, FaSignOutAlt, FaBoxOpen, FaUserCog } from 'react-icons/fa';
+import { FaHome, FaClipboardList, FaUser, FaSignOutAlt, FaBoxOpen, FaUserCog } from 'react-icons/fa';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import './Navbar.css';
@@ -37,8 +37,8 @@ const Navbar = () => {
                 <FaBoxOpen /> Manage Products
               </Link>
             )}
-            <Link to="/cart" className="navbar-item">
-              <FaShoppingCart /> Cart
+            <Link to="/order" className="navbar-item">
+              <FaClipboardList /> Order
               {totalItems > 0 && (
                 <span className="cart-badge">{totalItems}</span>
               )}

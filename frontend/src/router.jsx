@@ -4,6 +4,8 @@ import App from './App';
 import Auth from './components/Auth/Auth';
 import ProductManagement from './components/Admin/ProductManagement';
 import Cart from './components/Cart/Cart';
+import Order from './components/Order/Order';
+import Invoice from './components/Invoice/Invoice';
 import UserProfile from './components/UserProfile/UserProfile';
 import PrivateRoute from './components/PrivateRoute';
 import Products from './components/Product/Products';
@@ -38,12 +40,39 @@ const router = createBrowserRouter([
         )
       },
       {
+        path: '/order',
+        element: (
+          <PrivateRoute>
+            <Order />
+          </PrivateRoute>
+        )
+      },
+      {
+        path: '/invoice/:orderId',
+        element: (
+          <PrivateRoute>
+            <Invoice />
+          </PrivateRoute>
+        )
+      },
+      {
         path: '/profile',
         element: (
           <PrivateRoute>
             <UserProfile />
           </PrivateRoute>
         )
+      }
+    ]
+  }
+]);
+
+export default router;
+        ]
+      },
+      {
+        path: '/auth',
+        element: <Auth />
       }
     ]
   }

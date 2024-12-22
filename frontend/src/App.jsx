@@ -1,18 +1,19 @@
 // src/App.jsx
-
-import React, { useState } from "react";
+import React from "react";
 import { Outlet } from "react-router-dom";
 import Navbar from "./components/Navbar/Navbar";
+import Cart from "./components/Cart/Cart";
 import "./App.css";
 
 function App() {
-  const [selectedTag, setSelectedTag] = useState("");
-
   return (
-    <>
-      <Navbar onCategorySelect={setSelectedTag} />
-      <Outlet context={{ selectedTag }} />
-    </>
+    <div className="app">
+      <Navbar />
+      <main className="main-content">
+        <Outlet />
+      </main>
+      <Cart />
+    </div>
   );
 }
 
