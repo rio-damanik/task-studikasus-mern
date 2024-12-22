@@ -78,24 +78,27 @@ const Invoice = () => {
         <div className="invoice-header">
           <h1>Invoice</h1>
           <div className="invoice-info">
-            <p>Order ID: #{invoice.order_number}</p>
+            <p>Order ID: #{invoice.order_number || orderId}</p>
             <p>Date: {new Date(invoice.createdAt).toLocaleDateString()}</p>
             <p>Status: {invoice.status}</p>
           </div>
         </div>
 
-        <div className="delivery-info">
-          <h2>Delivery Information</h2>
-          <div className="address">
-            <p>{invoice.delivery_address.detail}</p>
-            <p>
-              {invoice.delivery_address.kelurahan}, {invoice.delivery_address.kecamatan}
-            </p>
-            <p>
-              {invoice.delivery_address.kabupaten}, {invoice.delivery_address.provinsi}
-            </p>
+        {invoice.delivery_address && (
+          <div className="delivery-info">
+            <h2>Delivery Information</h2>
+            <div className="address">
+              <p>{invoice.delivery_address.name}</p>
+              <p>{invoice.delivery_address.detail}</p>
+              <p>
+                {invoice.delivery_address.kelurahan}, {invoice.delivery_address.kecamatan}
+              </p>
+              <p>
+                {invoice.delivery_address.kabupaten}, {invoice.delivery_address.provinsi}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="order-items">
           <h2>Order Items</h2>
@@ -109,7 +112,7 @@ const Invoice = () => {
               </tr>
             </thead>
             <tbody>
-              {invoice.orderItems.map((item, index) => (
+              {(invoice.orderItems || []).map((item, index) => (
                 <tr key={index}>
                   <td>{item.name}</td>
                   <td>{item.qty}</td>
@@ -124,20 +127,22 @@ const Invoice = () => {
         <div className="invoice-summary">
           <div className="summary-row">
             <span>Subtotal:</span>
-            <span>{formatRupiah(invoice.sub_total)}</span>
+            <span>{formatRupiah(invoice.sub_total || 0)}</span>
           </div>
           <div className="summary-row">
             <span>Delivery Fee:</span>
-            <span>{formatRupiah(invoice.delivery_fee)}</span>
+            <span>{formatRupiah(invoice.delivery_fee || 0)}</span>
           </div>
           <div className="summary-row total">
             <span>Total:</span>
-            <span>{formatRupiah(invoice.total)}</span>
+            <span>{formatRupiah(invoice.total || 0)}</span>
           </div>
         </div>
 
         <div className="invoice-footer">
-          <p>Payment Method: {invoice.metode_payment}</p>
+          {invoice.metode_payment && (
+            <p>Payment Method: {invoice.metode_payment}</p>
+          )}
           <div className="actions">
             <button onClick={handlePrint} className="print-button">
               Print Invoice

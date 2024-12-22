@@ -277,7 +277,8 @@
   padding: 8px 16px;
   border: 1px solid #ddd;
   border-radius: 20px;
-  background: #093722;
+  background: #2196f3;
+  color: white;
   cursor: pointer;
   transition: all 0.3s;
 }
