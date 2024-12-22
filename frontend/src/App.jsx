@@ -5,7 +5,7 @@ import Navbar from "./components/Navbar/Navbar";
 import Cart from "./components/Cart/Cart";
 import "./App.css";
 
-function App() {
+const App = () => {
   return (
     <div className="app">
       <Navbar />
@@ -15,6 +15,6 @@ function App() {
       <Cart />
     </div>
   );
-}
+};
 
 export default App;

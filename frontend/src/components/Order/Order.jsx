@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
@@ -16,218 +16,145 @@ const Order = () => {
   const navigate = useNavigate();
   const { cart, getTotalPrice, clearCart, customerName } = useCart();
   const { token } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [deliveryAddress, setDeliveryAddress] = useState({
-    detail: "",
-    kelurahan: "",
-    kecamatan: "",
-    kabupaten: "",
-    provinsi: ""
-  });
-  const [metodePayment, setMetodePayment] = useState("tunai");
 
-  useEffect(() => {
-    // Check if cart is empty when component mounts
-    if (cart.length === 0) {
-      navigate('/');
+  const handleSubmitOrder = async () => {
+    if (!customerName) {
+      setError("Please enter your name before submitting the order");
+      return;
     }
-  }, [cart, navigate]);
 
-  const handleAddressChange = (e) => {
-    const { name, value } = e.target;
-    setDeliveryAddress(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+    if (cart.length === 0) {
+      setError("Your cart is empty");
+      return;
+    }
 
-  const handlePaymentChange = (e) => {
-    setMetodePayment(e.target.value);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+    setIsSubmitting(true);
     setError("");
 
     try {
-      // First create delivery address
-      const addressResponse = await axios.post(
-        "http://localhost:8000/api/delivery-address",
-        deliveryAddress,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-
-      // Then create order with cart items
       const orderData = {
-        delivery_fee: 10000,
-        delivery_address: addressResponse.data._id,
-        metode_payment: metodePayment,
-        customerName: customerName,
-        cart_items: cart.map(item => ({
+        items: cart.map(item => ({
           product: item.product._id,
-          name: item.product.name,
           price: item.product.price,
           qty: item.quantity
-        }))
+        })),
+        customerName: customerName,
+        totalAmount: getTotalPrice()
       };
 
-      const orderResponse = await axios.post(
-        "http://localhost:8000/api/order",
-        orderData,
-        {
-          headers: { Authorization: `Bearer ${token}` }
+      const response = await axios.post('http://localhost:8000/api/orders', orderData, {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-      );
+      });
 
-      // Clear cart and redirect to invoice
       clearCart();
-      navigate(`/invoice/${orderResponse.data._id}`);
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to create order");
-      console.error("Error creating order:", err);
+      navigate(`/invoice/${response.data._id}`);
+    } catch (error) {
+      console.error('Error submitting order:', error);
+      setError(error.response?.data?.message || 'Failed to submit order. Please try again.');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   if (cart.length === 0) {
     return (
-      <div className="order-container">
-        <div className="empty-cart">
-          <h2>Your cart is empty</h2>
-          <button onClick={() => navigate("/")} className="back-button">
-            Back to Products
-          </button>
-        </div>
+      <div className="order-empty" role="alert">
+        <h2>Your Cart is Empty</h2>
+        <p>Add some items to your cart first!</p>
+        <button 
+          onClick={() => navigate('/')} 
+          className="return-button"
+          aria-label="Return to shop"
+        >
+          Return to Shop
+        </button>
       </div>
     );
   }
 
   return (
     <div className="order-container">
-      <h2>Complete Your Order</h2>
-
-      {error && <div className="error-message">{error}</div>}
-
-      <div className="customer-info">
-        <h3>Customer Information</h3>
-        <p>Name: {customerName}</p>
+      <h1>Order Summary</h1>
+      
+      <div className="customer-info" role="region" aria-label="Customer Information">
+        <h2>Customer Information</h2>
+        <p>Name: <span id="customer-name">{customerName || "Not provided"}</span></p>
       </div>
 
-      <div className="order-summary">
-        <h3>Order Summary</h3>
-        <div className="cart-items">
-          {cart.map((item) => (
-            <div key={item.product._id} className="cart-item">
-              <div className="item-info">
-                <h4>{item.product.name}</h4>
-                <p>{item.quantity}x {formatRupiah(item.product.price)}</p>
+      <div className="order-items" role="region" aria-label="Order Items">
+        <h2>Order Items</h2>
+        {cart.map((item) => (
+          <div 
+            key={item.product._id} 
+            className="order-item"
+            role="listitem"
+          >
+            <div className="item-info">
+              <img 
+                src={item.product.image} 
+                alt={`Product: ${item.product.name}`}
+                className="item-image"
+                loading="lazy"
+              />
+              <div className="item-details">
+                <span className="item-name">{item.product.name}</span>
+                <span className="item-price-single">
+                  {formatRupiah(item.product.price)} each
+                </span>
               </div>
-              <div className="item-total">
-                {formatRupiah(item.product.price * item.quantity)}
-              </div>
+              <span className="item-quantity" aria-label={`Quantity: ${item.quantity}`}>
+                x {item.quantity}
+              </span>
             </div>
-          ))}
+            <span className="item-price-total" aria-label={`Total: ${formatRupiah(item.product.price * item.quantity)}`}>
+              {formatRupiah(item.product.price * item.quantity)}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <div className="order-summary" role="region" aria-label="Order Summary">
+        <div className="summary-row">
+          <span>Subtotal:</span>
+          <span>{formatRupiah(getTotalPrice())}</span>
         </div>
-        <div className="order-totals">
-          <div className="subtotal">
-            <span>Subtotal:</span>
-            <span>{formatRupiah(getTotalPrice())}</span>
-          </div>
-          <div className="delivery-fee">
-            <span>Delivery Fee:</span>
-            <span>{formatRupiah(10000)}</span>
-          </div>
-          <div className="total">
-            <span>Total:</span>
-            <span>{formatRupiah(getTotalPrice() + 10000)}</span>
-          </div>
+        <div className="summary-row total">
+          <span>Total Amount:</span>
+          <span aria-label={`Total amount: ${formatRupiah(getTotalPrice())}`}>
+            {formatRupiah(getTotalPrice())}
+          </span>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="order-form">
-        <div className="form-section">
-          <h3>Delivery Address</h3>
-          <input
-            type="text"
-            name="detail"
-            placeholder="Street address"
-            value={deliveryAddress.detail}
-            onChange={handleAddressChange}
-            required
-          />
-          <input
-            type="text"
-            name="kelurahan"
-            placeholder="Kelurahan"
-            value={deliveryAddress.kelurahan}
-            onChange={handleAddressChange}
-            required
-          />
-          <input
-            type="text"
-            name="kecamatan"
-            placeholder="Kecamatan"
-            value={deliveryAddress.kecamatan}
-            onChange={handleAddressChange}
-            required
-          />
-          <input
-            type="text"
-            name="kabupaten"
-            placeholder="Kabupaten"
-            value={deliveryAddress.kabupaten}
-            onChange={handleAddressChange}
-            required
-          />
-          <input
-            type="text"
-            name="provinsi"
-            placeholder="Provinsi"
-            value={deliveryAddress.provinsi}
-            onChange={handleAddressChange}
-            required
-          />
+      {error && (
+        <div className="error-message" role="alert" aria-live="polite">
+          {error}
         </div>
+      )}
 
-        <div className="form-section">
-          <h3>Payment Method</h3>
-          <div className="payment-options">
-            <label>
-              <input
-                type="radio"
-                name="payment"
-                value="tunai"
-                checked={metodePayment === "tunai"}
-                onChange={handlePaymentChange}
-              />
-              Cash
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="payment"
-                value="transfer"
-                checked={metodePayment === "transfer"}
-                onChange={handlePaymentChange}
-              />
-              Transfer
-            </label>
-          </div>
-        </div>
-
+      <div className="order-actions">
         <button 
-          type="submit" 
-          className="submit-button" 
-          disabled={loading}
+          onClick={() => navigate('/')} 
+          className="cancel-button"
+          disabled={isSubmitting}
+          aria-label="Continue shopping"
         >
-          {loading ? "Processing..." : "Place Order"}
+          Continue Shopping
         </button>
-      </form>
+        <button 
+          onClick={handleSubmitOrder} 
+          className="submit-button"
+          disabled={isSubmitting || !customerName}
+          aria-label={isSubmitting ? "Processing order..." : "Place order"}
+          aria-busy={isSubmitting}
+        >
+          {isSubmitting ? "Processing..." : "Place Order"}
+        </button>
+      </div>
     </div>
   );
 };
