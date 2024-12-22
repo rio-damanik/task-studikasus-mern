@@ -41,13 +41,11 @@ const ProductGrid = () => {
         }
 
         const productsResponse = await axios.get(`${url}?${params.toString()}`);
-        setProducts(productsResponse.data.data);
-        
-        setLoading(false);
+        setProducts(productsResponse.data);
       } catch (err) {
-        setError('Error fetching data. Please try again later.');
+        setError('Failed to fetch data');
+      } finally {
         setLoading(false);
-        console.error('Error:', err);
       }
     };
 
@@ -75,14 +73,6 @@ const ProductGrid = () => {
       console.error('Error adding to cart:', error);
     }
   };
-
-  if (loading) {
-    return <div className="loading">Loading...</div>;
-  }
-
-  if (error) {
-    return <div className="error">{error}</div>;
-  }
 
   return (
     <div className="product-grid-container">
@@ -119,16 +109,21 @@ const ProductGrid = () => {
       </div>
 
       <div className="products-grid">
-        {products.length > 0 ? (
-          products.map(product => (
-            <Product 
-              key={product._id} 
-              product={product} 
-              onAddToCart={handleAddToCart}
-            />
-          ))
+        {loading ? (
+          <p>Loading...</p>
+        ) : error ? (
+          <p>{error}</p>
         ) : (
-          <div className="no-products">No products found</div>
+          products.map(product => (
+            <div key={product._id} className="product-item">
+              <h3>{product.name}</h3>
+              <p>{product.description}</p>
+              <p>Price: {product.price}</p>
+              <p>Category: {product.category.name}</p>
+              <p>Tags: {product.tags.map(tag => tag.name).join(', ')}</p>
+              <button onClick={() => handleAddToCart(product)}>Add to Cart</button>
+            </div>
+          ))
         )}
       </div>
     </div>

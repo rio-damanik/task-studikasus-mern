@@ -7,7 +7,7 @@ const Tag = require('../tag/model');
 
 const index = async (req, res, next) => {
   try {
-    let { limit = 10, skip = 0, q = '', category = '', tags = [] } = req.query;
+    let { limit = 100, skip = 0, q = '', category = '', tags = [] } = req.query;
 
     let criteria = {};
 
