@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) => {
       fetchUser(token);
     } else {
       setLoading(false);
-    }
+    }                                                                                 
   }, []);
 
   const fetchUser = async (token) => {

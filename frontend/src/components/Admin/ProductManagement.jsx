@@ -1,26 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useAuth } from '../../context/AuthContext';
 import './ProductManagement.css';
 
 const ProductManagement = () => {
-  const { user } = useAuth();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [editingProduct, setEditingProduct] = useState(null);
   const [selectedTags, setSelectedTags] = useState([]);
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState('');
-  
+  const [showForm, setShowForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     price: '',
     category: '',
-    stock: ''
+    stock: '',
+    image: null
   });
 
   useEffect(() => {
@@ -32,8 +32,9 @@ const ProductManagement = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:8000/api/products');
-      setProducts(response.data);
+      const response = await axios.get('http://localhost:8000/api/products?limit=100');
+      setProducts(response.data.data);
+      setError(null);
     } catch (err) {
       setError('Failed to fetch products');
       console.error(err);
@@ -48,6 +49,7 @@ const ProductManagement = () => {
       setCategories(response.data);
     } catch (err) {
       console.error('Failed to fetch categories:', err);
+      setCategories([]);
     }
   };
 
@@ -57,25 +59,42 @@ const ProductManagement = () => {
       setTags(response.data);
     } catch (err) {
       console.error('Failed to fetch tags:', err);
+      setTags([]);
     }
   };
 
+  const filteredProducts = products.filter(product => 
+    selectedCategory === 'all' || product.category?._id === selectedCategory
+  );
+
   const handleInputChange = (e) => {
+    const value = e.target.type === 'number' ? 
+      e.target.value === '' ? '' : Number(e.target.value) : 
+      e.target.value;
+    
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: value
     });
   };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+      if (file.type.startsWith('image/')) {
+        setFormData(prev => ({
+          ...prev,
+          image: file
+        }));
+        
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreview(reader.result);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setError('Please select an image file');
+      }
     }
   };
 
@@ -92,37 +111,50 @@ const ProductManagement = () => {
     e.preventDefault();
     try {
       setLoading(true);
+      setError(null);
+
       const formDataToSend = new FormData();
       formDataToSend.append('name', formData.name);
       formDataToSend.append('description', formData.description);
       formDataToSend.append('price', formData.price);
       formDataToSend.append('category', formData.category);
       formDataToSend.append('stock', formData.stock);
+      
       selectedTags.forEach(tagId => {
         formDataToSend.append('tags[]', tagId);
       });
-      if (imageFile) {
-        formDataToSend.append('image', imageFile);
+      
+      if (formData.image) {
+        formDataToSend.append('image', formData.image);
       }
 
+      const token = localStorage.getItem('token');
+      const config = {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      };
+
       if (editingProduct) {
-        await axios.put(`http://localhost:8000/api/products/${editingProduct._id}`, formDataToSend, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        });
+        await axios.put(
+          `http://localhost:8000/api/products/${editingProduct._id}`, 
+          formDataToSend,
+          config
+        );
       } else {
-        await axios.post('http://localhost:8000/api/products', formDataToSend, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        });
+        await axios.post(
+          'http://localhost:8000/api/products', 
+          formDataToSend,
+          config
+        );
       }
-      fetchProducts();
+
+      await fetchProducts(); // Refresh the product list
       resetForm();
+      setError('');
     } catch (err) {
+      console.error('Error:', err);
       setError(err.response?.data?.message || 'Failed to save product');
     } finally {
       setLoading(false);
@@ -135,28 +167,29 @@ const ProductManagement = () => {
       name: product.name,
       description: product.description,
       price: product.price,
-      category: product.category._id,
+      category: product.category?._id || '',
       stock: product.stock
     });
-    setSelectedTags(product.tags.map(tag => tag._id));
+    setSelectedTags(product.tags?.map(tag => tag._id) || []);
     setImagePreview(product.image_url);
+    setShowForm(true);
   };
 
   const handleDelete = async (productId) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
-      try {
-        setLoading(true);
-        await axios.delete(`http://localhost:8000/api/products/${productId}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        fetchProducts();
-      } catch (err) {
-        setError('Failed to delete product');
-      } finally {
-        setLoading(false);
-      }
+    if (!window.confirm('Are you sure you want to delete this product?')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await axios.delete(`http://localhost:8000/api/products/${productId}`);
+      await fetchProducts(); // Refresh the product list
+      setError('');
+    } catch (err) {
+      setError('Failed to delete product');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -167,191 +200,226 @@ const ProductManagement = () => {
       description: '',
       price: '',
       category: '',
-      stock: ''
+      stock: '',
+      image: null
     });
     setSelectedTags([]);
-    setImageFile(null);
-    setImagePreview('');
+    setImagePreview(null);
+    setShowForm(false);
   };
 
-  if (!user || user.role !== 'admin') {
-    return <div className="unauthorized">Unauthorized Access</div>;
-  }
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR'
+    }).format(price);
+  };
 
   return (
     <div className="product-management">
-      <h2>{editingProduct ? 'Edit Product' : 'Add New Product'}</h2>
-      
+      <div className="management-header">
+        <h2>Product Management</h2>
+        <button 
+          className="add-product-btn" 
+          onClick={() => setShowForm(true)}
+        >
+          <i className="fas fa-plus"></i> Add New Product
+        </button>
+      </div>
+
       {error && <div className="error-message">{error}</div>}
-      
-      <form onSubmit={handleSubmit} className="product-form">
-        <div className="form-group">
-          <label>
-            <i className="fas fa-utensils"></i>
-            <span>Product Name</span>
-          </label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleInputChange}
-            required
-            placeholder="Enter product name"
-          />
-        </div>
 
-        <div className="form-group">
-          <label>
-            <i className="fas fa-align-left"></i>
-            <span>Description</span>
-          </label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleInputChange}
-            required
-            placeholder="Enter product description"
-          />
-        </div>
-
-        <div className="form-group">
-          <label>
-            <i className="fas fa-tag"></i>
-            <span>Price</span>
-          </label>
-          <input
-            type="number"
-            name="price"
-            value={formData.price}
-            onChange={handleInputChange}
-            required
-            min="0"
-            placeholder="Enter price"
-          />
-        </div>
-
-        <div className="form-group">
-          <label>
-            <i className="fas fa-list"></i>
-            <span>Category</span>
-          </label>
-          <select
-            name="category"
-            value={formData.category}
-            onChange={handleInputChange}
-            required
+      <div className="category-filter">
+        <button
+          className={`filter-btn ${selectedCategory === 'all' ? 'active' : ''}`}
+          onClick={() => setSelectedCategory('all')}
+        >
+          All
+        </button>
+        {categories.map(category => (
+          <button
+            key={category._id}
+            className={`filter-btn ${selectedCategory === category._id ? 'active' : ''}`}
+            onClick={() => setSelectedCategory(category._id)}
           >
-            <option value="">Select a category</option>
-            {categories.map(category => (
-              <option key={category._id} value={category._id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label>
-            <i className="fas fa-tags"></i>
-            <span>Tags</span>
-          </label>
-          <div className="tags-container">
-            {tags.map(tag => (
-              <label key={tag._id} className="tag-checkbox">
-                <input
-                  type="checkbox"
-                  checked={selectedTags.includes(tag._id)}
-                  onChange={() => handleTagChange(tag._id)}
-                />
-                <span>{tag.name}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div className="form-group">
-          <label>
-            <i className="fas fa-image"></i>
-            <span>Product Image</span>
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="file-input"
-          />
-          {imagePreview && (
-            <div className="image-preview">
-              <img src={imagePreview} alt="Preview" />
-            </div>
-          )}
-        </div>
-
-        <div className="form-group">
-          <label>
-            <i className="fas fa-cubes"></i>
-            <span>Stock</span>
-          </label>
-          <input
-            type="number"
-            name="stock"
-            value={formData.stock}
-            onChange={handleInputChange}
-            required
-            min="0"
-            placeholder="Enter stock quantity"
-          />
-        </div>
-
-        <div className="form-actions">
-          <button type="submit" className="submit-button" disabled={loading}>
-            {loading ? (
-              <span className="loading-spinner"></span>
-            ) : (
-              <>{editingProduct ? 'Update Product' : 'Add Product'}</>
-            )}
+            {category.name}
           </button>
-          {editingProduct && (
-            <button type="button" onClick={resetForm} className="cancel-button">
-              Cancel
-            </button>
-          )}
-        </div>
-      </form>
+        ))}
+      </div>
 
-      <div className="products-list">
-        <h3>Products List</h3>
-        {loading && !editingProduct ? (
-          <div className="loading">Loading products...</div>
+      <div className="products-grid">
+        {loading ? (
+          <div className="loading">Loading...</div>
         ) : (
-          <div className="products-grid">
-            {products.map(product => (
-              <div key={product._id} className="product-card">
-                <img src={product.image_url} alt={product.name} className="product-image" />
-                <div className="product-details">
-                  <h4>{product.name}</h4>
-                  <p className="price">Rp {product.price.toLocaleString()}</p>
-                  <p className="category">{product.category?.name}</p>
-                  <div className="product-tags">
-                    {product.tags?.map(tag => (
-                      <span key={tag._id} className="tag">{tag.name}</span>
+          filteredProducts.map(product => (
+            <div key={product._id} className="product-card">
+              <div className="product-image-container">
+                <img 
+                  src={product.image_url || '/placeholder.jpg'} 
+                  alt={product.name} 
+                  className="product-image"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = '/placeholder.jpg';
+                  }}
+                />
+              </div>
+              <div className="product-details">
+                <h3>{product.name}</h3>
+                <p className="description">{product.description}</p>
+                <p className="price">IDR {formatPrice(product.price)}</p>
+                <p className="stock">Stock: {product.stock}</p>
+                <div className="product-actions">
+                  <button 
+                    className="edit-btn"
+                    onClick={() => handleEdit(product)}
+                  >
+                    <i className="fas fa-edit"></i> Edit
+                  </button>
+                  <button 
+                    className="delete-btn"
+                    onClick={() => handleDelete(product._id)}
+                  >
+                    <i className="fas fa-trash"></i> Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {showForm && (
+        <div className="modal-overlay">
+          <form onSubmit={handleSubmit} className="product-form">
+            <div className="form-header">
+              <h3>{editingProduct ? 'Edit Product' : 'Add New Product'}</h3>
+              <button type="button" className="close-btn" onClick={resetForm}>×</button>
+            </div>
+
+            <div className="form-content">
+              <div className="form-section">
+                <div className="form-group">
+                  <label>Product Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="Enter product name"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Description</label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="Enter product description"
+                    rows="4"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Category</label>
+                  <select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleInputChange}
+                    required
+                  >
+                    <option value="">Select a category</option>
+                    {categories.map(category => (
+                      <option key={category._id} value={category._id}>
+                        {category.name}
+                      </option>
                     ))}
+                  </select>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Price (IDR)</label>
+                    <input
+                      type="number"
+                      name="price"
+                      value={formData.price}
+                      onChange={handleInputChange}
+                      required
+                      min="0"
+                      placeholder="Enter price"
+                    />
                   </div>
-                  <p className="stock">Stock: {product.stock}</p>
-                  <div className="product-actions">
-                    <button onClick={() => handleEdit(product)} className="edit-button">
-                      <i className="fas fa-edit"></i> Edit
-                    </button>
-                    <button onClick={() => handleDelete(product._id)} className="delete-button">
-                      <i className="fas fa-trash"></i> Delete
-                    </button>
+
+                  <div className="form-group">
+                    <label>Stock</label>
+                    <input
+                      type="number"
+                      name="stock"
+                      value={formData.stock}
+                      onChange={handleInputChange}
+                      required
+                      min="0"
+                      placeholder="Enter stock quantity"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Product Image</label>
+                  <div className="image-upload">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="file-input"
+                    />
+                    <div className="image-upload-content">
+                      <div className="image-upload-icon">📸</div>
+                      <div className="image-upload-text">
+                        Click or drag image here to upload
+                      </div>
+                    </div>
+                  </div>
+                  {imagePreview && (
+                    <div className="image-preview">
+                      <img src={imagePreview} alt="Preview" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label>Tags</label>
+                  <div className="tags-container">
+                    {tags.map(tag => (
+                      <label key={tag._id} className="tag-checkbox">
+                        <input
+                          type="checkbox"
+                          checked={selectedTags.includes(tag._id)}
+                          onChange={() => handleTagChange(tag._id)}
+                        />
+                        <span>{tag.name}</span>
+                      </label>
+                    ))}
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            </div>
+
+            <div className="form-actions">
+              <button type="submit" className="submit-button" disabled={loading}>
+                {loading ? 'Processing...' : (editingProduct ? 'Update Product' : 'Add Product')}
+              </button>
+              <button type="button" onClick={resetForm} className="cancel-button">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 };

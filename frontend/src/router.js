@@ -8,6 +8,7 @@ import Invoice from './components/Invoice/Invoice';
 import Product from './components/Product/Product';
 import UserProfile from './components/UserProfile/UserProfile';
 import MainLayout from './layouts/MainLayout';
+import ProductManagement from './components/Admin/ProductManagement';
 
 export const router = createBrowserRouter(
   [
@@ -25,6 +26,10 @@ export const router = createBrowserRouter(
             {
               path: '/products',
               element: <Product />,
+            },
+            {
+              path: '/admin/products',
+              element: <ProductManagement />,
             },
           ],
         },
