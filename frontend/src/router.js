@@ -52,7 +52,7 @@ export const router = createBrowserRouter(
           element: <DeliveryAddress />,
         },
         {
-          path: '/invoice',
+          path: '/invoice/:orderId',
           element: <Invoice />,
         },
         {

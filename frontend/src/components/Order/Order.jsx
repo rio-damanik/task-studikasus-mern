@@ -1,162 +1,226 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useCart } from "../../context/CartContext";
-import { useAuth } from "../../context/AuthContext";
-import axios from "axios";
-import "./Order.css";
-
-const formatRupiah = (number) => {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR"
-  }).format(number);
-};
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useCart } from '../../context/CartContext';
+import DeliveryAddress from '../DeliveryAddress/DeliveryAddress';
+import axios from 'axios';
+import { FaMapMarkerAlt } from 'react-icons/fa';
+import './Order.css';
 
 const Order = () => {
   const navigate = useNavigate();
-  const { cart, getTotalPrice, clearCart, customerName } = useCart();
-  const { token } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const { cart, clearCart } = useCart();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState(null);
+  const [orderType, setOrderType] = useState('dine-in');
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [bankTransferProof, setBankTransferProof] = useState(null);
+
+  const calculateTotal = () => {
+    return cart.reduce((total, item) => total + (item.product.price * item.quantity), 0);
+  };
+
+  const handleAddressSelect = (address) => {
+    setSelectedAddress(address);
+    setShowAddressModal(false);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setBankTransferProof(file);
+    }
+  };
 
   const handleSubmitOrder = async () => {
-    if (!customerName) {
-      setError("Please enter your name before submitting the order");
+    if (orderType === 'delivery' && !selectedAddress) {
+      setError('Please select a delivery address');
       return;
     }
 
-    if (cart.length === 0) {
-      setError("Your cart is empty");
+    if (paymentMethod === 'transfer' && !bankTransferProof) {
+      setError('Please upload transfer proof');
       return;
     }
 
-    setIsSubmitting(true);
-    setError("");
+    setLoading(true);
+    setError('');
 
     try {
-      const orderData = {
-        items: cart.map(item => ({
-          product: item.product._id,
-          price: item.product.price,
-          qty: item.quantity
-        })),
-        customerName: customerName,
-        totalAmount: getTotalPrice()
-      };
+      const formData = new FormData();
+      formData.append('items', JSON.stringify(cart.map(item => ({
+        product: item.product._id,
+        price: item.product.price,
+        quantity: item.quantity
+      }))));
+      formData.append('total', calculateTotal());
+      formData.append('orderType', orderType);
+      formData.append('paymentMethod', paymentMethod);
+      
+      if (orderType === 'delivery') {
+        formData.append('deliveryAddress', JSON.stringify(selectedAddress));
+      }
 
-      const response = await axios.post('http://localhost:8000/api/orders', orderData, {
+      if (paymentMethod === 'transfer') {
+        formData.append('transferProof', bankTransferProof);
+      }
+
+      const token = localStorage.getItem('token');
+      const response = await axios.post('http://localhost:8000/api/orders', formData, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
         }
       });
 
       clearCart();
-      navigate(`/invoice/${response.data._id}`);
-    } catch (error) {
-      console.error('Error submitting order:', error);
-      setError(error.response?.data?.message || 'Failed to submit order. Please try again.');
+      navigate(`/invoice/${response.data.order._id}`);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to place order');
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
-  if (cart.length === 0) {
-    return (
-      <div className="order-empty" role="alert">
-        <h2>Your Cart is Empty</h2>
-        <p>Add some items to your cart first!</p>
-        <button 
-          onClick={() => navigate('/')} 
-          className="return-button"
-          aria-label="Return to shop"
-        >
-          Return to Shop
-        </button>
-      </div>
-    );
-  }
-
-  const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
-
   return (
-    <div className="order-container">
-      <h1>Order Summary</h1>
-      
-      <div className="customer-info" role="region" aria-label="Customer Information">
-        <h2>Customer Information</h2>
-        <p>Name: <span id="customer-name">{customerName || "Not provided"}</span></p>
-      </div>
+    <div className="order-page">
+      <div className="order-container">
+        <h1>Order Summary</h1>
 
-      <div className="order-items" role="region" aria-label="Order Items">
-        <h2>Order Items</h2>
-        {cart.map((item) => (
-          <div 
-            key={item.product._id} 
-            className="order-item"
-            role="listitem"
-          >
-            <div className="item-info">
-              <img 
-                src={item.product.image} 
-                alt={`Product: ${item.product.name}`}
-                className="item-image"
-                loading="lazy"
+        <div className="order-section">
+          <h2>Order Type</h2>
+          <div className="order-type-options">
+            <label>
+              <input
+                type="radio"
+                value="dine-in"
+                checked={orderType === 'dine-in'}
+                onChange={(e) => setOrderType(e.target.value)}
               />
-              <div className="item-details">
-                <span className="item-name">{item.product.name}</span>
-                <span className="item-price-single">
-                  {formatRupiah(item.product.price)} each
-                </span>
-              </div>
-              <span className="item-quantity" aria-label={`Quantity: ${item.quantity}`}>
-                x {item.quantity}
-              </span>
-            </div>
-            <span className="item-price-total" aria-label={`Total: ${formatRupiah(item.product.price * item.quantity)}`}>
-              {formatRupiah(item.product.price * item.quantity)}
-            </span>
+              Dine In
+            </label>
+            <label>
+              <input
+                type="radio"
+                value="delivery"
+                checked={orderType === 'delivery'}
+                onChange={(e) => setOrderType(e.target.value)}
+              />
+              Delivery
+            </label>
           </div>
-        ))}
-      </div>
 
-      <div className="order-summary" role="region" aria-label="Order Summary">
-        <div className="summary-row">
-          <span>Subtotal:</span>
-          <span>{formatRupiah(getTotalPrice())}</span>
+          {orderType === 'delivery' && (
+            <div className="delivery-address-section">
+              <h2>Delivery Address</h2>
+              {selectedAddress ? (
+                <div className="selected-address">
+                  <div className="address-info">
+                    <h3>{selectedAddress.nama}</h3>
+                    <p>{selectedAddress.detail}</p>
+                    <p>{selectedAddress.kelurahan}, {selectedAddress.kecamatan}</p>
+                    <p>{selectedAddress.kabupaten}, {selectedAddress.provinsi}</p>
+                  </div>
+                  <button onClick={() => setShowAddressModal(true)} className="change-address-button">
+                    Change Address
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => setShowAddressModal(true)} className="select-address-button">
+                  <FaMapMarkerAlt /> Select Delivery Address
+                </button>
+              )}
+            </div>
+          )}
         </div>
-        <div className="summary-row total">
-          <span>Total Amount:</span>
-          <span aria-label={`Total amount: ${formatRupiah(getTotalPrice())}`}>
-            {formatRupiah(getTotalPrice())}
-          </span>
-        </div>
-        <div className="total-items">Total Items: {totalItems}</div>
-      </div>
 
-      {error && (
-        <div className="error-message" role="alert" aria-live="polite">
-          {error}
+        <div className="order-section">
+          <h2>Order Items</h2>
+          <div className="order-items">
+            {cart.map((item) => (
+              <div key={item.product._id} className="order-item">
+                <div className="item-info">
+                  <h3>{item.product.name}</h3>
+                  <p>Quantity: {item.quantity}</p>
+                </div>
+                <div className="item-price">
+                  Rp {(item.product.price * item.quantity).toLocaleString()}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      )}
 
-      <div className="order-actions">
-        <button 
-          onClick={() => navigate('/')} 
-          className="cancel-button"
-          disabled={isSubmitting}
-          aria-label="Continue shopping"
+        <div className="order-section">
+          <h2>Payment Method</h2>
+          <div className="payment-options">
+            <label>
+              <input
+                type="radio"
+                value="cash"
+                checked={paymentMethod === 'cash'}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+              />
+              Cash
+            </label>
+            <label>
+              <input
+                type="radio"
+                value="transfer"
+                checked={paymentMethod === 'transfer'}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+              />
+              Bank Transfer
+            </label>
+          </div>
+
+          {paymentMethod === 'transfer' && (
+            <div className="transfer-proof-section">
+              <label htmlFor="transferProof">Upload Transfer Proof:</label>
+              <input
+                type="file"
+                id="transferProof"
+                accept="image/*"
+                onChange={handleFileChange}
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="order-summary">
+          <div className="summary-row">
+            <span>Subtotal</span>
+            <span>Rp {calculateTotal().toLocaleString()}</span>
+          </div>
+          <div className="summary-row">
+            <span>Delivery Fee</span>
+            <span>Rp 10,000</span>
+          </div>
+          <div className="summary-row total">
+            <span>Total</span>
+            <span>Rp {(calculateTotal() + 10000).toLocaleString()}</span>
+          </div>
+        </div>
+
+        {error && <div className="error-message">{error}</div>}
+
+        <button
+          onClick={handleSubmitOrder}
+          disabled={loading}
+          className="place-order-button"
         >
-          Continue Shopping
+          {loading ? 'Placing Order...' : 'Place Order'}
         </button>
-        <button 
-          onClick={handleSubmitOrder} 
-          className="submit-button"
-          disabled={isSubmitting || !customerName}
-          aria-label={isSubmitting ? "Processing order..." : "Place order"}
-          aria-busy={isSubmitting}
-        >
-          {isSubmitting ? "Processing..." : "Place Order"}
-        </button>
+
+        {showAddressModal && (
+          <DeliveryAddress
+            isModal={true}
+            onClose={() => setShowAddressModal(false)}
+            onSelect={handleAddressSelect}
+            selectedId={selectedAddress?._id}
+          />
+        )}
       </div>
     </div>
   );

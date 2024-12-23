@@ -2,7 +2,15 @@
 
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaHome, FaClipboardList, FaUser, FaSignOutAlt, FaBoxOpen, FaUserCog } from 'react-icons/fa';
+import { 
+  FaHome, 
+  FaClipboardList, 
+  FaUser, 
+  FaSignOutAlt, 
+  FaBoxOpen, 
+  FaUserCog,
+  FaMapMarkerAlt 
+} from 'react-icons/fa';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import './Navbar.css';
@@ -42,6 +50,9 @@ const Navbar = () => {
               {totalItems > 0 && (
                 <span className="cart-badge">{totalItems}</span>
               )}
+            </Link>
+            <Link to="/delivery-address" className="navbar-item">
+              <FaMapMarkerAlt /> Addresses
             </Link>
             <Link to="/profile" className="navbar-item">
               <FaUserCog /> Profile
