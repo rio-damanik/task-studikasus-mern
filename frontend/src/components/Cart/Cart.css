@@ -145,6 +145,23 @@
 }
 
 .remove-button {
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.remove-button:hover {
+  color: #a71d2a;
+}
+
+.remove-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.remove-button {
   padding: 0.5rem 1rem;
   background-color: #fff;
   border: 1px solid #dc3545;
@@ -411,6 +428,11 @@
   border-color: #dc3545;
 }
 
+.remove-button svg {
+  width: 16px;
+  height: 16px;
+}
+
 .quantity {
   min-width: 20px;
   text-align: center;
@@ -456,42 +478,28 @@
 }
 
 .customer-info {
-  padding: 15px;
-  border-bottom: 1px solid #dee2e6;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
 }
 
 .input-group {
-  position: relative;
   display: flex;
   align-items: center;
 }
 
 .input-icon {
-  position: absolute;
-  left: 12px;
-  color: #6c757d;
-  font-size: 16px;
+  margin-right: 10px;
+  color: #555;
 }
 
 .customer-name-input {
-  width: 100%;
-  padding: 12px 12px 12px 40px;
-  border: 1px solid #dee2e6;
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
   border-radius: 4px;
-  font-size: 14px;
-  color: #495057;
-  transition: border-color 0.2s ease;
-}
-
-.customer-name-input:focus {
-  outline: none;
-  border-color: #28a745;
-  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
-}
-
-.customer-name-input::placeholder {
-  color: #adb5bd;
 }
 
 @media (max-width: 768px) {

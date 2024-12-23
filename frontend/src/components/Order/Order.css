@@ -1,10 +1,10 @@
 .order-container {
-  max-width: 800px;
+  max-width: 600px;
   margin: 2rem auto;
-  padding: 2rem;
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: relative;
   z-index: 1;
 }
@@ -18,21 +18,21 @@
 }
 
 .error-message {
-  background-color: #fff3cd;
-  color: #856404;
+  background-color: #ffe6e6;
+  color: #d9534f;
   padding: 1rem;
   margin-bottom: 1rem;
   border-radius: 4px;
   text-align: center;
-  border: 1px solid #ffeeba;
+  border: 1px solid #f5c6cb;
 }
 
 .order-summary {
-  background-color: #f8f9fa;
-  padding: 1.5rem;
+  background-color: #ffffff;
+  padding: 1rem;
   border-radius: 8px;
-  margin-bottom: 2rem;
-  border: 1px solid #e9ecef;
+  margin-bottom: 1.5rem;
+  border: 1px solid #ddd;
 }
 
 .order-summary h3 {
@@ -116,6 +116,7 @@ input[type="text"],
 textarea {
   width: 100%;
   padding: 0.75rem;
+  margin-top: 20px;
   margin-bottom: 1rem;
   border: 1px solid #dee2e6;
   border-radius: 4px;
@@ -356,6 +357,13 @@ button:disabled {
 .summary-row.total span:last-child {
   color: #28a745;
   font-size: 1.2rem;
+}
+
+.total-items {
+  font-size: 1rem;
+  color: #555;
+  text-align: center;
+  margin-bottom: 1rem;
 }
 
 @media (max-width: 768px) {

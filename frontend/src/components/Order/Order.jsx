@@ -76,6 +76,8 @@ const Order = () => {
     );
   }
 
+  const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
+
   return (
     <div className="order-container">
       <h1>Order Summary</h1>
@@ -128,6 +130,7 @@ const Order = () => {
             {formatRupiah(getTotalPrice())}
           </span>
         </div>
+        <div className="total-items">Total Items: {totalItems}</div>
       </div>
 
       {error && (

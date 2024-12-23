@@ -9,6 +9,8 @@ import Product from './components/Product/Product';
 import UserProfile from './components/UserProfile/UserProfile';
 import MainLayout from './layouts/MainLayout';
 import ProductManagement from './components/Admin/ProductManagement';
+import PrivateRoute from './components/PrivateRoute';
+import Order from './components/Order/Order'; 
 
 export const router = createBrowserRouter(
   [
@@ -64,6 +66,10 @@ export const router = createBrowserRouter(
         {
           path: '/admin',
           element: <UserProfile />,
+        },
+        {
+          path: '/order',
+          element: <PrivateRoute><Order /></PrivateRoute>,
         },
         {
           path: '*',

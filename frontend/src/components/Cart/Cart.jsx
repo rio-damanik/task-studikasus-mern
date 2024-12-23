@@ -68,10 +68,12 @@ const Cart = () => {
           ) : (
             <>
               <div className="customer-info">
+                <label className="customer-label" htmlFor="customerName">CUSTOMER NAME</label>
                 <div className="input-group">
                   <FaUser className="input-icon" />
                   <input
                     type="text"
+                    id="customerName"
                     placeholder="Enter customer name"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
@@ -102,8 +104,8 @@ const Cart = () => {
                     <button
                       className="remove-button"
                       onClick={() => handleRemoveItem(item.product._id)}
-                    >
-                      <FaTimes />
+                    >x
+                      <FaTimes size={16} />
                     </button>
                   </div>
                 </div>
