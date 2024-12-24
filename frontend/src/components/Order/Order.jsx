@@ -66,6 +66,10 @@ const Order = () => {
     return cart.reduce((total, item) => total + (item.product.price * item.quantity), 0);
   };
 
+  const getTotalQuantity = () => {
+    return cart.reduce((total, item) => total + item.quantity, 0);
+  };
+
   const getDeliveryFee = () => {
     return orderType === 'delivery' ? 10000 : 0;
   };
@@ -384,7 +388,7 @@ const Order = () => {
 
           <div className="order-totals">
             <div className="subtotal">
-              <span>Subtotal</span>
+              <span>Subtotal ({getTotalQuantity()} items)</span>
               <span>{formatPrice(getSubtotal())}</span>
             </div>
             {orderType === 'delivery' && (
