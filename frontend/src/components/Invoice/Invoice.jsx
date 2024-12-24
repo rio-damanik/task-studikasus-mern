@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FaUtensils, FaMotorcycle, FaPrint, FaHome } from 'react-icons/fa';
+import { config } from '../../config/config';
 import './Invoice.css';
 
 const Invoice = () => {
@@ -14,36 +15,33 @@ const Invoice = () => {
   useEffect(() => {
     const fetchInvoice = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          navigate('/login', { state: { from: `/invoice/${orderId}` } });
-          return;
+        const response = await axios.get(`${config.endpoints.orders}/${orderId}`);
+        console.log('Invoice data:', response.data); // Debug log
+        if (response.data && !response.data.error) {
+          setInvoice(response.data);
+        } else {
+          throw new Error(response.data?.message || 'Invoice not found');
         }
-
-        const response = await axios.get(`http://localhost:8000/api/orders/${orderId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        setInvoice(response.data);
-        setLoading(false);
       } catch (err) {
         console.error('Error fetching invoice:', err);
-        setError(err.response?.data?.message || 'Failed to load invoice');
+        setError(err.response?.data?.message || err.message || 'Failed to load invoice');
+      } finally {
         setLoading(false);
-
-        if (err.response?.status === 401) {
-          navigate('/login', { state: { from: `/invoice/${orderId}` } });
-        }
       }
     };
 
-    fetchInvoice();
-  }, [orderId, navigate]);
+    if (orderId) {
+      fetchInvoice();
+    }
+  }, [orderId]);
+
+  const formatPrice = (price) => {
+    return `Rp ${price.toLocaleString('id-ID')}`;
+  };
 
   const formatDate = (date) => {
-    return new Date(date).toLocaleString('en-US', {
+    return new Date(date).toLocaleString('id-ID', {
+      weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -64,11 +62,16 @@ const Invoice = () => {
     return <div className="error-message">Invoice not found</div>;
   }
 
+  // Calculate subtotal
+  const subtotal = invoice.orderItems?.reduce((sum, item) => {
+    return sum + (item.price * item.quantity);
+  }, 0) || 0;
+
   return (
-    <div className={`invoice-container ${invoice.orderType}`}>
+    <div className="invoice-container">
       <div className="invoice-header">
         <div className="order-type-icon">
-          {invoice.orderType === 'delivery' ? <FaMotorcycle size={40} /> : <FaUtensils size={40} />}
+          {invoice.delivery_address ? <FaMotorcycle size={40} /> : <FaUtensils size={40} />}
         </div>
         <h1>Order Invoice</h1>
         <p className="invoice-number">#{orderId}</p>
@@ -76,30 +79,30 @@ const Invoice = () => {
       </div>
 
       <div className="invoice-details">
+        <div className="customer-info">
+          <h3>Customer</h3>
+          <p>{invoice.customer_name}</p>
+        </div>
+
         <div className="order-info">
           <h3>Order Type</h3>
           <p className="order-type">
-            {invoice.orderType === 'delivery' ? 'Delivery Order' : 'Dine-in Order'}
+            {invoice.delivery_address ? 'Delivery Order' : 'Pickup Order'}
           </p>
         </div>
 
         <div className="payment-info">
           <h3>Payment Method</h3>
-          <p>{invoice.paymentMethod === 'transfer' ? 'Bank Transfer' : 'Cash Payment'}</p>
+          <p>{invoice.metode_payment === 'transfer' ? 'Bank Transfer' : 'Cash Payment'}</p>
         </div>
 
-        {invoice.orderType === 'delivery' && invoice.deliveryAddress && (
+        {invoice.delivery_address && (
           <div className="delivery-info">
             <h3>Delivery Address</h3>
             <div className="address-details">
-              <p className="customer-name">{invoice.deliveryAddress.nama}</p>
-              <p>{invoice.deliveryAddress.detail}</p>
-              <p>
-                {invoice.deliveryAddress.kelurahan}, {invoice.deliveryAddress.kecamatan}
-              </p>
-              <p>
-                {invoice.deliveryAddress.kabupaten}, {invoice.deliveryAddress.provinsi}
-              </p>
+              <p>{invoice.delivery_address.detail}</p>
+              <p>{invoice.delivery_address.kelurahan}, {invoice.delivery_address.kecamatan}</p>
+              <p>{invoice.delivery_address.kabupaten}, {invoice.delivery_address.provinsi}</p>
             </div>
           </div>
         )}
@@ -108,15 +111,15 @@ const Invoice = () => {
       <div className="order-items">
         <h3>Order Items</h3>
         <div className="items-list">
-          {invoice.items.map((item, index) => (
+          {invoice.orderItems?.map((item, index) => (
             <div key={index} className="order-item">
               <div className="item-info">
-                <h4>{item.product.name}</h4>
+                <h4>{item.name}</h4>
                 <p className="item-quantity">Quantity: {item.quantity}</p>
-                <p className="item-price">Price: Rp {item.price.toLocaleString()}</p>
+                <p className="item-price">Price: {formatPrice(item.price)}</p>
               </div>
               <div className="item-total">
-                Rp {(item.price * item.quantity).toLocaleString()}
+                {formatPrice(item.price * item.quantity)}
               </div>
             </div>
           ))}
@@ -126,17 +129,17 @@ const Invoice = () => {
       <div className="invoice-summary">
         <div className="summary-row subtotal">
           <span>Subtotal</span>
-          <span>Rp {invoice.total.toLocaleString()}</span>
+          <span>{formatPrice(subtotal)}</span>
         </div>
-        {invoice.orderType === 'delivery' && (
+        {invoice.delivery_fee > 0 && (
           <div className="summary-row delivery-fee">
             <span>Delivery Fee</span>
-            <span>Rp {(invoice.deliveryFee || 0).toLocaleString()}</span>
+            <span>{formatPrice(invoice.delivery_fee)}</span>
           </div>
         )}
         <div className="summary-row total">
           <span>Total Amount</span>
-          <span>Rp {((invoice.total || 0) + (invoice.deliveryFee || 0)).toLocaleString()}</span>
+          <span>{formatPrice(subtotal + (invoice.delivery_fee || 0))}</span>
         </div>
       </div>
 

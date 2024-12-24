@@ -48,14 +48,6 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: 'invoice/:orderId',
-        element: (
-          <PrivateRoute>
-            <Invoice />
-          </PrivateRoute>
-        ),
-      },
-      {
         path: 'profile',
         element: (
           <PrivateRoute>

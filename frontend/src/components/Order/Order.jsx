@@ -75,7 +75,7 @@ const Order = () => {
     return orderType === 'delivery' ? 10000 : 0;
   };
 
-  const getTotal = () => {
+  const calculateTotal = () => {
     const subtotal = getSubtotal();
     const deliveryFee = getDeliveryFee();
     return subtotal + deliveryFee;
@@ -99,53 +99,54 @@ const Order = () => {
       setError('');
 
       const orderData = {
-        customerName,
         items: cart.map(item => ({
           product: item.product._id,
-          quantity: item.quantity,
-          price: item.product.price
+          quantity: item.quantity
         })),
-        total: getTotal(),
-        orderType,
-        paymentMethod,
-        status: 'pending',
-        orderDate: new Date().toISOString()
+        delivery_address: orderType === 'delivery' ? selectedAddress._id : null,
+        metode_payment: paymentMethod,
+        delivery_fee: orderType === 'delivery' ? 10000 : 0,
+        customer_name: customerName
       };
 
-      // Add delivery address if order type is delivery
-      if (orderType === 'delivery' && selectedAddress) {
-        orderData.address = selectedAddress;
-      }
+      console.log('Submitting order:', orderData); // Debug log
 
-      // Add transfer proof if payment method is transfer
+      let response;
+      
       if (paymentMethod === 'transfer' && transferProof) {
         const formData = new FormData();
         formData.append('transferProof', transferProof);
-        Object.keys(orderData).forEach(key => {
-          formData.append(key, JSON.stringify(orderData[key]));
-        });
+        formData.append('orderData', JSON.stringify(orderData));
         
-        const response = await axios.post(`${config.apiUrl}/api/orders`, formData, {
+        console.log('Submitting with transfer proof'); // Debug log
+        
+        response = await axios.post(config.endpoints.orders, formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
         });
-        
-        if (response.data && response.data._id) {
-          clearCart();
-          navigate(`/invoice/${response.data._id}`);
-        }
       } else {
-        // Regular order without transfer proof
-        const response = await axios.post(`${config.apiUrl}/api/orders`, orderData);
+        console.log('Submitting regular order'); // Debug log
         
-        if (response.data && response.data._id) {
-          clearCart();
-          navigate(`/invoice/${response.data._id}`);
-        }
+        response = await axios.post(config.endpoints.orders, orderData, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      }
+
+      console.log('Server response:', response.data); // Debug log
+
+      if (response.data && !response.data.error) {
+        clearCart();
+        setShowConfirmation(false);
+        navigate(`/invoice/${response.data._id}`);
+      } else {
+        throw new Error(response.data.message || 'Failed to create order');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to place order');
+      console.error('Order submission error:', err.response || err);
+      setError(err.response?.data?.message || err.message || 'Failed to place order. Please try again.');
       setShowConfirmation(false);
     } finally {
       setLoading(false);
@@ -399,7 +400,7 @@ const Order = () => {
             )}
             <div className="total">
               <span>Total</span>
-              <span>{formatPrice(getTotal())}</span>
+              <span>{formatPrice(calculateTotal())}</span>
             </div>
           </div>
         </div>
@@ -426,7 +427,7 @@ const Order = () => {
                 <p><strong>Customer Name:</strong> {customerName}</p>
                 <p><strong>Order Type:</strong> {orderType}</p>
                 <p><strong>Payment Method:</strong> {paymentMethod}</p>
-                <p><strong>Total Amount:</strong> {formatPrice(getTotal())}</p>
+                <p><strong>Total Amount:</strong> {formatPrice(calculateTotal())}</p>
               </div>
               <div className="confirmation-actions">
                 <button 
