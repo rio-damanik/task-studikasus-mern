@@ -25,6 +25,7 @@ const Order = () => {
   const [transferProof, setTransferProof] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   useEffect(() => {
     if (!cart || cart.length === 0) {
@@ -88,72 +89,71 @@ const Order = () => {
     }
   };
 
-  const handleSubmitOrder = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+  const handlePlaceOrder = async () => {
+    setShowConfirmation(true);
+  };
 
+  const handleConfirmOrder = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('Authentication required');
-      }
+      setLoading(true);
+      setError('');
 
       const orderData = {
-        customer_name: customerName,
-        delivery_fee: orderType === 'delivery' ? 10000 : 0,
-        metode_payment: paymentMethod,
+        customerName,
         items: cart.map(item => ({
-          name: item.product.name,
-          price: item.product.price,
-          qty: item.quantity,
-          product: item.product._id
-        }))
+          product: item.product._id,
+          quantity: item.quantity,
+          price: item.product.price
+        })),
+        total: getTotal(),
+        orderType,
+        paymentMethod,
+        status: 'pending',
+        orderDate: new Date().toISOString()
       };
 
+      // Add delivery address if order type is delivery
       if (orderType === 'delivery' && selectedAddress) {
-        orderData.delivery_address = selectedAddress;
+        orderData.address = selectedAddress;
       }
 
-      let response;
+      // Add transfer proof if payment method is transfer
       if (paymentMethod === 'transfer' && transferProof) {
         const formData = new FormData();
         formData.append('transferProof', transferProof);
         Object.keys(orderData).forEach(key => {
-          if (typeof orderData[key] === 'object') {
-            formData.append(key, JSON.stringify(orderData[key]));
-          } else {
-            formData.append(key, orderData[key]);
-          }
+          formData.append(key, JSON.stringify(orderData[key]));
         });
-
-        response = await axios.post(config.endpoints.orders, formData, {
+        
+        const response = await axios.post(`${config.apiUrl}/api/orders`, formData, {
           headers: {
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
           }
         });
+        
+        if (response.data && response.data._id) {
+          clearCart();
+          navigate(`/invoice/${response.data._id}`);
+        }
       } else {
-        response = await axios.post(config.endpoints.orders, orderData, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-      }
-
-      if (response.data && response.data._id) {
-        clearCart();
-        navigate(`/invoice/${response.data._id}`);
-      } else {
-        throw new Error('Invalid response from server');
+        // Regular order without transfer proof
+        const response = await axios.post(`${config.apiUrl}/api/orders`, orderData);
+        
+        if (response.data && response.data._id) {
+          clearCart();
+          navigate(`/invoice/${response.data._id}`);
+        }
       }
     } catch (err) {
-      console.error('Error placing order:', err);
-      setError(err.response?.data?.message || 'Failed to place order. Please try again.');
+      setError(err.response?.data?.message || 'Failed to place order');
+      setShowConfirmation(false);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCancelConfirmation = () => {
+    setShowConfirmation(false);
   };
 
   const handleCancelOrder = () => {
@@ -406,14 +406,48 @@ const Order = () => {
 
         {error && <div className="error-message">{error}</div>}
         
-        <button
+        <button 
           className="place-order-button"
-          onClick={handleSubmitOrder}
+          onClick={handlePlaceOrder}
           disabled={loading}
         >
           {loading ? 'Processing...' : 'Place Order'}
         </button>
       </div>
+
+      {/* Order Confirmation Modal */}
+      {showConfirmation && (
+        <div className="modal-overlay">
+          <div className="confirmation-modal">
+            <h2>Confirm Your Order</h2>
+            <div className="confirmation-content">
+              <p>Please review your order details:</p>
+              <div className="confirmation-details">
+                <p><strong>Customer Name:</strong> {customerName}</p>
+                <p><strong>Order Type:</strong> {orderType}</p>
+                <p><strong>Payment Method:</strong> {paymentMethod}</p>
+                <p><strong>Total Amount:</strong> {formatPrice(getTotal())}</p>
+              </div>
+              <div className="confirmation-actions">
+                <button 
+                  className="confirm-button"
+                  onClick={handleConfirmOrder}
+                  disabled={loading}
+                >
+                  Confirm Order
+                </button>
+                <button 
+                  className="cancel-button"
+                  onClick={handleCancelConfirmation}
+                  disabled={loading}
+                >
+                  Go Back
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
