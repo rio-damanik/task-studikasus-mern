@@ -99,13 +99,9 @@ const Order = () => {
       setError('');
 
       const orderData = {
-        items: cart.map(item => ({
-          product: item.product._id,
-          quantity: item.quantity
-        })),
-        delivery_address: orderType === 'delivery' ? selectedAddress._id : null,
-        metode_payment: paymentMethod,
         delivery_fee: orderType === 'delivery' ? 10000 : 0,
+        metode_payment: paymentMethod,
+        delivery_address: orderType === 'delivery' ? selectedAddress._id : null,
         customer_name: customerName
       };
 

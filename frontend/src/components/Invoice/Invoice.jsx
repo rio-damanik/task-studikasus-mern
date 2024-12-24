@@ -62,9 +62,9 @@ const Invoice = () => {
     return <div className="error-message">Invoice not found</div>;
   }
 
-  // Calculate subtotal
+  // Calculate subtotal from orderItems
   const subtotal = invoice.orderItems?.reduce((sum, item) => {
-    return sum + (item.price * item.quantity);
+    return sum + (item.price * item.qty);
   }, 0) || 0;
 
   return (
@@ -115,11 +115,11 @@ const Invoice = () => {
             <div key={index} className="order-item">
               <div className="item-info">
                 <h4>{item.name}</h4>
-                <p className="item-quantity">Quantity: {item.quantity}</p>
+                <p className="item-quantity">Quantity: {item.qty}</p>
                 <p className="item-price">Price: {formatPrice(item.price)}</p>
               </div>
               <div className="item-total">
-                {formatPrice(item.price * item.quantity)}
+                {formatPrice(item.price * item.qty)}
               </div>
             </div>
           ))}
