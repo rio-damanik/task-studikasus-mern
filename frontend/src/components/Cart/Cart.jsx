@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaShoppingCart, FaTimes, FaPlus, FaMinus, FaUser, FaEdit, FaTrash } from 'react-icons/fa';
 import { useCart } from '../../context/CartContext';
 import { formatRupiah } from '../../utils/formatRupiah';
+import DeliveryAddress from '../DeliveryAddress/DeliveryAddress';
 import './Cart.css';
 
 const Cart = () => {
@@ -10,6 +11,9 @@ const Cart = () => {
   const [isEditing, setIsEditing] = useState(false);
   const { cart, customerName, setCustomerName, updateQuantity, removeFromCart, clearCart } = useCart();
   const [editedName, setEditedName] = useState(customerName);
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [orderType, setOrderType] = useState('dine-in'); // 'dine-in' or 'delivery'
   const navigate = useNavigate();
 
   const toggleCart = () => setIsOpen(!isOpen);
@@ -61,6 +65,10 @@ const Cart = () => {
       if (customerNameInput) {
         customerNameInput.focus();
       }
+      return;
+    }
+    if (orderType === 'delivery' && !selectedAddressId) {
+      alert('Please select a delivery address');
       return;
     }
     setIsOpen(false); // Close cart drawer before navigation
@@ -188,18 +196,65 @@ const Cart = () => {
         </div>
 
         <div className="cart-footer">
+          <div className="order-type-selector">
+            <label>Order Type:</label>
+            <div className="order-type-buttons">
+              <button
+                className={`order-type-button ${orderType === 'dine-in' ? 'active' : ''}`}
+                onClick={() => {
+                  setOrderType('dine-in');
+                  setSelectedAddressId(null);
+                }}
+              >
+                Dine In
+              </button>
+              <button
+                className={`order-type-button ${orderType === 'delivery' ? 'active' : ''}`}
+                onClick={() => setOrderType('delivery')}
+              >
+                Delivery
+              </button>
+            </div>
+          </div>
+
           <div className="cart-total">
             <span>Total:</span>
             <span>{formatPrice(getTotalPrice())}</span>
           </div>
+          
+          {orderType === 'delivery' && (
+            <button 
+              className="address-button"
+              onClick={() => setShowAddressModal(true)}
+            >
+              {selectedAddressId ? 'Change Address' : 'Add Delivery Address'}
+            </button>
+          )}
+
           <button
             className="checkout-button"
             onClick={handleCheckout}
-            disabled={cart.length === 0 || !customerName.trim()}
+            disabled={
+              cart.length === 0 || 
+              !customerName.trim() || 
+              (orderType === 'delivery' && !selectedAddressId)
+            }
           >
-            Proceed to Checkout
+            Checkout
           </button>
         </div>
+
+        {showAddressModal && (
+          <DeliveryAddress
+            isModal={true}
+            onClose={() => setShowAddressModal(false)}
+            onSelect={(addressId) => {
+              setSelectedAddressId(addressId);
+              setShowAddressModal(false);
+            }}
+            selectedId={selectedAddressId}
+          />
+        )}
       </div>
     </>
   );
