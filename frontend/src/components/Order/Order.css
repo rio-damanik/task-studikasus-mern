@@ -235,7 +235,6 @@
 }
 
 .add-address-button {
-  width: 100%;
   padding: 20px;
   background: linear-gradient(135deg, #2ecc71, #27ae60);
   color: white;
@@ -594,50 +593,36 @@
 /* Order Actions */
 .order-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 20px;
   margin-top: 30px;
 }
 
-.place-order-button,
-.back-to-cart-button {
-  padding: 15px 30px;
-  border: none;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
+.place-order-button {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-}
-
-.place-order-button {
+  width: calc(100% - 60px);
+  margin: 30px;
+  padding: 18px;
   background: linear-gradient(135deg, #2ecc71, #27ae60);
   color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.place-order-button:hover {
+.place-order-button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
+  box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
 }
 
-.back-to-cart-button {
-  background: #f8f9fa;
-  color: #6c757d;
-  border: 2px solid #e9ecef;
-}
-
-.back-to-cart-button:hover {
-  background: #e9ecef;
-  transform: translateY(-2px);
-}
-
-.place-order-button:disabled,
-.back-to-cart-button:disabled {
-  opacity: 0.7;
+.place-order-button:disabled {
+  background: #adb5bd;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
@@ -661,11 +646,6 @@
   .order-section,
   .customer-section {
     padding: 20px;
-  }
-
-  .place-order-button {
-    width: calc(100% - 40px);
-    margin: 20px;
   }
 
   .address-grid {

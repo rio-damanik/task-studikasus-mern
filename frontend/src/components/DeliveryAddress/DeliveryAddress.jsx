@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDeliveryAddress } from '../../context/DeliveryAddressContext';
-import { FaPlus, FaEdit, FaTrash, FaArrowLeft, FaTimes, FaCheck } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaArrowLeft, FaTimes, FaCheck, FaMapMarkerAlt, FaUser, FaCity, FaBuilding } from 'react-icons/fa';
 import './DeliveryAddress.css';
 
 const DeliveryAddress = ({ isModal, onClose, onSelect, selectedId }) => {
@@ -105,7 +105,7 @@ const DeliveryAddress = ({ isModal, onClose, onSelect, selectedId }) => {
       await deleteAddress(id);
       await fetchAddresses();
     } catch (error) {
-      console.error('Error deleting address:', error);
+      console.error('Failed to delete address:', error);
     }
   };
 
@@ -122,418 +122,214 @@ const DeliveryAddress = ({ isModal, onClose, onSelect, selectedId }) => {
     setFormError('');
   };
 
+  const handleCancel = () => {
+    resetForm();
+    setShowForm(false);
+  };
+
   const handleBack = () => {
-    if (isModal && onClose) {
+    if (isModal) {
       onClose();
     } else {
       navigate(-1);
     }
   };
 
-  const handleSelect = (address) => {
-    if (onSelect) {
-      onSelect(address);
-    }
-  };
+  const renderForm = () => (
+    <div className="address-form-container">
+      <div className="form-header">
+        <h2>
+          {editingId ? (
+            <>
+              <FaEdit /> Edit Address
+            </>
+          ) : (
+            <>
+              <FaPlus /> Add New Address
+            </>
+          )}
+        </h2>
+        <button className="close-form-button" onClick={handleCancel}>
+          <FaTimes />
+        </button>
+      </div>
 
-  const containerClass = isModal ? 'delivery-address-modal' : 'delivery-address-page';
+      <form onSubmit={handleSubmit} className="address-form">
+        <div className="form-group">
+          <label>
+            <span className="label-icon"><FaUser /></span>
+            <span className="label-text">Name</span>
+          </label>
+          <input
+            type="text"
+            name="nama"
+            value={form.nama}
+            onChange={handleInputChange}
+            placeholder="Enter recipient name"
+          />
+        </div>
+
+        <div className="form-group">
+          <label>
+            <span className="label-icon"><FaMapMarkerAlt /></span>
+            <span className="label-text">Address Detail</span>
+          </label>
+          <textarea
+            name="detail"
+            value={form.detail}
+            onChange={handleInputChange}
+            placeholder="Enter complete address details"
+            rows="3"
+          />
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label>
+              <span className="label-icon"><FaBuilding /></span>
+              <span className="label-text">Kelurahan</span>
+            </label>
+            <input
+              type="text"
+              name="kelurahan"
+              value={form.kelurahan}
+              onChange={handleInputChange}
+              placeholder="Enter kelurahan"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>
+              <span className="label-icon"><FaBuilding /></span>
+              <span className="label-text">Kecamatan</span>
+            </label>
+            <input
+              type="text"
+              name="kecamatan"
+              value={form.kecamatan}
+              onChange={handleInputChange}
+              placeholder="Enter kecamatan"
+            />
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label>
+              <span className="label-icon"><FaCity /></span>
+              <span className="label-text">Kabupaten</span>
+            </label>
+            <input
+              type="text"
+              name="kabupaten"
+              value={form.kabupaten}
+              onChange={handleInputChange}
+              placeholder="Enter kabupaten"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>
+              <span className="label-icon"><FaCity /></span>
+              <span className="label-text">Provinsi</span>
+            </label>
+            <input
+              type="text"
+              name="provinsi"
+              value={form.provinsi}
+              onChange={handleInputChange}
+              placeholder="Enter provinsi"
+            />
+          </div>
+        </div>
+
+        {formError && <div className="form-error">{formError}</div>}
+
+        <div className="form-actions">
+          <button type="submit" className="submit-button" disabled={submitting}>
+            {submitting ? 'Saving...' : (
+              <>
+                <FaCheck /> {editingId ? 'Update Address' : 'Save Address'}
+              </>
+            )}
+          </button>
+          <button type="button" className="cancel-button" onClick={handleCancel}>
+            <FaTimes /> Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+
+  const renderAddresses = () => (
+    <div className="addresses-container">
+      <div className="addresses-header">
+        <button className="back-button" onClick={handleBack}>
+          <FaArrowLeft /> Back
+        </button>
+        <h1>My Addresses</h1>
+        <button className="add-address-button" onClick={() => setShowForm(true)}>
+          <FaPlus /> Add Address
+        </button>
+      </div>
+
+      {contextError && <div className="error-message">{contextError}</div>}
+
+      {loading ? (
+        <div className="loading">Loading addresses...</div>
+      ) : addresses.length === 0 ? (
+        <div className="no-addresses">
+          <FaMapMarkerAlt />
+          <p>No addresses found</p>
+          <button onClick={() => setShowForm(true)} className="add-first-address">
+            <FaPlus /> Add Your First Address
+          </button>
+        </div>
+      ) : (
+        <div className="address-cards">
+          {addresses.map((address) => (
+            <div 
+              key={address._id} 
+              className={`address-card ${selectedId === address._id ? 'selected' : ''}`}
+              onClick={() => isModal && onSelect && onSelect(address)}
+            >
+              <div className="address-card-header">
+                <FaMapMarkerAlt className="location-icon" />
+                <h3>{address.nama}</h3>
+              </div>
+              <div className="address-card-content">
+                <p className="address-detail">{address.detail}</p>
+                <div className="address-meta">
+                  <span>{address.kelurahan}</span>
+                  <span>{address.kecamatan}</span>
+                  <span>{address.kabupaten}</span>
+                  <span>{address.provinsi}</span>
+                </div>
+              </div>
+              <div className="address-card-actions">
+                <button onClick={(e) => {
+                  e.stopPropagation();
+                  handleEdit(address);
+                }} className="edit-button">
+                  <FaEdit /> Edit
+                </button>
+                <button onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(address._id);
+                }} className="delete-button">
+                  <FaTrash /> Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 
   return (
-    <div className={containerClass}>
-      {isModal && (
-        <div className="modal-overlay" onClick={onClose}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="content-wrapper">
-              <div className="page-header">
-                <button onClick={handleBack} className="back-button">
-                  <FaTimes />
-                </button>
-                <h1>Select Delivery Address</h1>
-                {!showForm && (
-                  <button onClick={() => setShowForm(true)} className="add-address-button">
-                    <FaPlus /> Add New Address
-                  </button>
-                )}
-              </div>
-
-              {contextError && <div className="error-message">{contextError}</div>}
-
-              {showForm ? (
-                <div className="address-form-container">
-                  <div className="form-header">
-                    <h2>{editingId ? 'Edit Address' : 'Add New Address'}</h2>
-                    <button 
-                      onClick={() => {
-                        setShowForm(false);
-                        resetForm();
-                      }} 
-                      className="close-button"
-                    >
-                      <FaTimes />
-                    </button>
-                  </div>
-
-                  {formError && <div className="error-message">{formError}</div>}
-
-                  <form onSubmit={handleSubmit} className="address-form">
-                    <div className="form-group">
-                      <label htmlFor="nama">Name:</label>
-                      <input
-                        type="text"
-                        id="nama"
-                        name="nama"
-                        value={form.nama}
-                        onChange={handleInputChange}
-                        placeholder="Enter recipient name"
-                        disabled={submitting}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label htmlFor="detail">Detail Address:</label>
-                      <textarea
-                        id="detail"
-                        name="detail"
-                        value={form.detail}
-                        onChange={handleInputChange}
-                        placeholder="Enter street name, building number, etc."
-                        disabled={submitting}
-                      />
-                    </div>
-
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label htmlFor="kelurahan">Kelurahan:</label>
-                        <input
-                          type="text"
-                          id="kelurahan"
-                          name="kelurahan"
-                          value={form.kelurahan}
-                          onChange={handleInputChange}
-                          placeholder="Enter kelurahan"
-                          disabled={submitting}
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <label htmlFor="kecamatan">Kecamatan:</label>
-                        <input
-                          type="text"
-                          id="kecamatan"
-                          name="kecamatan"
-                          value={form.kecamatan}
-                          onChange={handleInputChange}
-                          placeholder="Enter kecamatan"
-                          disabled={submitting}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label htmlFor="kabupaten">Kabupaten:</label>
-                        <input
-                          type="text"
-                          id="kabupaten"
-                          name="kabupaten"
-                          value={form.kabupaten}
-                          onChange={handleInputChange}
-                          placeholder="Enter kabupaten"
-                          disabled={submitting}
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <label htmlFor="provinsi">Provinsi:</label>
-                        <input
-                          type="text"
-                          id="provinsi"
-                          name="provinsi"
-                          value={form.provinsi}
-                          onChange={handleInputChange}
-                          placeholder="Enter provinsi"
-                          disabled={submitting}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="form-actions">
-                      <button 
-                        type="button" 
-                        onClick={() => {
-                          setShowForm(false);
-                          resetForm();
-                        }}
-                        className="cancel-button"
-                        disabled={submitting}
-                      >
-                        Cancel
-                      </button>
-                      <button 
-                        type="submit" 
-                        className="submit-button"
-                        disabled={submitting}
-                      >
-                        {submitting ? 'Saving...' : (editingId ? 'Update Address' : 'Save Address')}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              ) : (
-                <div className="addresses-container">
-                  {loading ? (
-                    <div className="loading-message">Loading addresses...</div>
-                  ) : addresses.length === 0 ? (
-                    <div className="no-addresses">
-                      <p>You haven't added any delivery addresses yet.</p>
-                      <button onClick={() => setShowForm(true)} className="add-first-address-button">
-                        <FaPlus /> Add Your First Address
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="address-grid">
-                      {addresses.map((address) => (
-                        <div key={address._id} className={`address-card ${selectedId === address._id ? 'selected' : ''}`}>
-                          <div className="address-info">
-                            <h3>{address.nama}</h3>
-                            <p>{address.detail}</p>
-                            <p>{address.kelurahan}, {address.kecamatan}</p>
-                            <p>{address.kabupaten}, {address.provinsi}</p>
-                          </div>
-                          <div className="address-actions">
-                            {isModal ? (
-                              <button 
-                                onClick={() => handleSelect(address)} 
-                                className="select-button"
-                              >
-                                {selectedId === address._id ? (
-                                  <><FaCheck /> Selected</>
-                                ) : (
-                                  'Select'
-                                )}
-                              </button>
-                            ) : (
-                              <>
-                                <button 
-                                  onClick={() => handleEdit(address)} 
-                                  className="edit-button"
-                                >
-                                  <FaEdit /> Edit
-                                </button>
-                                <button 
-                                  onClick={() => handleDelete(address._id)} 
-                                  className="delete-button"
-                                >
-                                  <FaTrash /> Delete
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-      {!isModal && (
-        <div className="content-wrapper">
-          <div className="page-header">
-            <button onClick={handleBack} className="back-button">
-              <FaArrowLeft /> Back
-            </button>
-            <h1>Delivery Addresses</h1>
-            {!showForm && (
-              <button onClick={() => setShowForm(true)} className="add-address-button">
-                <FaPlus /> Add New Address
-              </button>
-            )}
-          </div>
-
-          {contextError && <div className="error-message">{contextError}</div>}
-
-          {showForm ? (
-            <div className="address-form-container">
-              <div className="form-header">
-                <h2>{editingId ? 'Edit Address' : 'Add New Address'}</h2>
-                <button 
-                  onClick={() => {
-                    setShowForm(false);
-                    resetForm();
-                  }} 
-                  className="close-button"
-                >
-                  <FaTimes />
-                </button>
-              </div>
-
-              {formError && <div className="error-message">{formError}</div>}
-
-              <form onSubmit={handleSubmit} className="address-form">
-                <div className="form-group">
-                  <label htmlFor="nama">Name:</label>
-                  <input
-                    type="text"
-                    id="nama"
-                    name="nama"
-                    value={form.nama}
-                    onChange={handleInputChange}
-                    placeholder="Enter recipient name"
-                    disabled={submitting}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="detail">Detail Address:</label>
-                  <textarea
-                    id="detail"
-                    name="detail"
-                    value={form.detail}
-                    onChange={handleInputChange}
-                    placeholder="Enter street name, building number, etc."
-                    disabled={submitting}
-                  />
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="kelurahan">Kelurahan:</label>
-                    <input
-                      type="text"
-                      id="kelurahan"
-                      name="kelurahan"
-                      value={form.kelurahan}
-                      onChange={handleInputChange}
-                      placeholder="Enter kelurahan"
-                      disabled={submitting}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="kecamatan">Kecamatan:</label>
-                    <input
-                      type="text"
-                      id="kecamatan"
-                      name="kecamatan"
-                      value={form.kecamatan}
-                      onChange={handleInputChange}
-                      placeholder="Enter kecamatan"
-                      disabled={submitting}
-                    />
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="kabupaten">Kabupaten:</label>
-                    <input
-                      type="text"
-                      id="kabupaten"
-                      name="kabupaten"
-                      value={form.kabupaten}
-                      onChange={handleInputChange}
-                      placeholder="Enter kabupaten"
-                      disabled={submitting}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="provinsi">Provinsi:</label>
-                    <input
-                      type="text"
-                      id="provinsi"
-                      name="provinsi"
-                      value={form.provinsi}
-                      onChange={handleInputChange}
-                      placeholder="Enter provinsi"
-                      disabled={submitting}
-                    />
-                  </div>
-                </div>
-
-                <div className="form-actions">
-                  <button 
-                    type="button" 
-                    onClick={() => {
-                      setShowForm(false);
-                      resetForm();
-                    }}
-                    className="cancel-button"
-                    disabled={submitting}
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="submit" 
-                    className="submit-button"
-                    disabled={submitting}
-                  >
-                    {submitting ? 'Saving...' : (editingId ? 'Update Address' : 'Save Address')}
-                  </button>
-                </div>
-              </form>
-            </div>
-          ) : (
-            <div className="addresses-container">
-              {loading ? (
-                <div className="loading-message">Loading addresses...</div>
-              ) : addresses.length === 0 ? (
-                <div className="no-addresses">
-                  <p>You haven't added any delivery addresses yet.</p>
-                  <button onClick={() => setShowForm(true)} className="add-first-address-button">
-                    <FaPlus /> Add Your First Address
-                  </button>
-                </div>
-              ) : (
-                <div className="address-grid">
-                  {addresses.map((address) => (
-                    <div key={address._id} className={`address-card ${selectedId === address._id ? 'selected' : ''}`}>
-                      <div className="address-info">
-                        <h3>{address.nama}</h3>
-                        <p>{address.detail}</p>
-                        <p>{address.kelurahan}, {address.kecamatan}</p>
-                        <p>{address.kabupaten}, {address.provinsi}</p>
-                      </div>
-                      <div className="address-actions">
-                        {isModal ? (
-                          <button 
-                            onClick={() => handleSelect(address)} 
-                            className="select-button"
-                          >
-                            {selectedId === address._id ? (
-                              <><FaCheck /> Selected</>
-                            ) : (
-                              'Select'
-                            )}
-                          </button>
-                        ) : (
-                          <>
-                            <button 
-                              onClick={() => handleEdit(address)} 
-                              className="edit-button"
-                            >
-                              <FaEdit /> Edit
-                            </button>
-                            <button 
-                              onClick={() => handleDelete(address._id)} 
-                              className="delete-button"
-                            >
-                              <FaTrash /> Delete
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+    <div className={`delivery-address-container ${isModal ? 'modal' : ''}`}>
+      {showForm ? renderForm() : renderAddresses()}
     </div>
   );
 };

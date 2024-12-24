@@ -402,22 +402,13 @@ const Order = () => {
 
         {error && <div className="error-message">{error}</div>}
         
-        <div className="order-actions">
-          <button
-            className="place-order-button"
-            onClick={handleSubmitOrder}
-            disabled={loading}
-          >
-            {loading ? 'Processing...' : 'Place Order'}
-          </button>
-          <button 
-            className="back-to-cart-button"
-            onClick={() => navigate('/cart')}
-            disabled={loading}
-          >
-            Back to Cart
-          </button>
-        </div>
+        <button
+          className="place-order-button"
+          onClick={handleSubmitOrder}
+          disabled={loading}
+        >
+          {loading ? 'Processing...' : 'Place Order'}
+        </button>
       </div>
     </div>
   );
