@@ -1,26 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import {
-  FaSpinner,
-  FaHome,
-  FaPrint,
-  FaMapMarkerAlt,
-  FaCreditCard,
-  FaCheckCircle,
-  FaTimesCircle,
-  FaUtensils,
-  FaMotorcycle
-} from 'react-icons/fa';
+import { FaUtensils, FaMotorcycle, FaPrint, FaHome } from 'react-icons/fa';
 import './Invoice.css';
 
 const Invoice = () => {
   const { orderId } = useParams();
-  const [searchParams] = useSearchParams();
-  const orderType = searchParams.get('type');
   const navigate = useNavigate();
-  const { token } = useAuth();
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -28,47 +14,36 @@ const Invoice = () => {
   useEffect(() => {
     const fetchInvoice = async () => {
       try {
+        const token = localStorage.getItem('token');
         if (!token) {
           navigate('/login', { state: { from: `/invoice/${orderId}` } });
           return;
         }
 
-        const response = await axios.get(`http://localhost:8000/api/invoices/${orderId}`, {
+        const response = await axios.get(`http://localhost:8000/api/orders/${orderId}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
 
-        if (response.data && !response.data.error) {
-          setInvoice(response.data);
-        } else {
-          throw new Error(response.data?.message || 'Failed to load invoice');
-        }
-      } catch (error) {
-        console.error('Failed to fetch invoice:', error);
-        setError(error.response?.data?.message || 'Failed to load invoice');
-        
-        if (error.response?.status === 401) {
+        setInvoice(response.data);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching invoice:', err);
+        setError(err.response?.data?.message || 'Failed to load invoice');
+        setLoading(false);
+
+        if (err.response?.status === 401) {
           navigate('/login', { state: { from: `/invoice/${orderId}` } });
         }
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchInvoice();
-  }, [orderId, token, navigate]);
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR'
-    }).format(price);
-  };
+  }, [orderId, navigate]);
 
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('id-ID', {
-      weekday: 'long',
+    return new Date(date).toLocaleString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -77,140 +52,104 @@ const Invoice = () => {
     });
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   if (loading) {
-    return (
-      <div className="loading-container">
-        <FaSpinner className="spinner" />
-        <p>Loading invoice...</p>
-      </div>
-    );
+    return <div className="loading">Loading invoice...</div>;
   }
 
   if (error) {
-    return (
-      <div className="error-container">
-        <FaTimesCircle className="error-icon" />
-        <p>{error}</p>
-        <button onClick={() => navigate('/')} className="back-home-button">
-          <FaHome /> Back to Home
-        </button>
-      </div>
-    );
+    return <div className="error-message">{error}</div>;
   }
 
   if (!invoice) {
-    return (
-      <div className="error-container">
-        <FaTimesCircle className="error-icon" />
-        <p>Invoice not found</p>
-        <button onClick={() => navigate('/')} className="back-home-button">
-          <FaHome /> Back to Home
-        </button>
-      </div>
-    );
+    return <div className="error-message">Invoice not found</div>;
   }
 
   return (
-    <div className="invoice-container">
+    <div className={`invoice-container ${invoice.orderType}`}>
       <div className="invoice-header">
-        <div className="header-content">
-          <h1>Invoice</h1>
-          <p className="invoice-number">#{invoice.order?.order_number || orderId}</p>
-          <p className="invoice-date">Date: {formatDate(invoice.createdAt)}</p>
+        <div className="order-type-icon">
+          {invoice.orderType === 'delivery' ? <FaMotorcycle size={40} /> : <FaUtensils size={40} />}
         </div>
-        <div className="header-actions">
-          <button onClick={() => navigate('/')} className="back-home-button">
-            <FaHome /> Back to Home
-          </button>
-          <button onClick={handlePrint} className="print-button">
-            <FaPrint /> Print Invoice
-          </button>
-        </div>
-      </div>
-
-      <div className="invoice-status">
-        <div className={`status-badge ${invoice.payment_status}`}>
-          {invoice.payment_status === 'paid' ? (
-            <><FaCheckCircle /> Paid</>
-          ) : (
-            <><FaTimesCircle /> {invoice.payment_status}</>
-          )}
-        </div>
-        <div className="order-type">
-          {orderType === 'delivery' ? (
-            <><FaMotorcycle /> Delivery Order</>
-          ) : (
-            <><FaUtensils /> Dine-in Order</>
-          )}
-        </div>
+        <h1>Order Invoice</h1>
+        <p className="invoice-number">#{orderId}</p>
+        <p className="invoice-date">{formatDate(invoice.createdAt)}</p>
       </div>
 
       <div className="invoice-details">
-        <div className="payment-info">
-          <h3><FaCreditCard /> Payment Method</h3>
-          <p>{invoice.metode_payment === 'transfer' ? 'Bank Transfer' : 'Cash Payment'}</p>
+        <div className="order-info">
+          <h3>Order Type</h3>
+          <p className="order-type">
+            {invoice.orderType === 'delivery' ? 'Delivery Order' : 'Dine-in Order'}
+          </p>
         </div>
 
-        {orderType === 'delivery' && invoice.delivery_address && (
+        <div className="payment-info">
+          <h3>Payment Method</h3>
+          <p>{invoice.paymentMethod === 'transfer' ? 'Bank Transfer' : 'Cash Payment'}</p>
+        </div>
+
+        {invoice.orderType === 'delivery' && invoice.deliveryAddress && (
           <div className="delivery-info">
-            <h3><FaMapMarkerAlt /> Delivery Address</h3>
-            <p>
-              {invoice.delivery_address.detail}<br />
-              Kel. {invoice.delivery_address.kelurahan},<br />
-              Kec. {invoice.delivery_address.kecamatan},<br />
-              {invoice.delivery_address.kabupaten},<br />
-              {invoice.delivery_address.provinsi}
-            </p>
+            <h3>Delivery Address</h3>
+            <div className="address-details">
+              <p className="customer-name">{invoice.deliveryAddress.nama}</p>
+              <p>{invoice.deliveryAddress.detail}</p>
+              <p>
+                {invoice.deliveryAddress.kelurahan}, {invoice.deliveryAddress.kecamatan}
+              </p>
+              <p>
+                {invoice.deliveryAddress.kabupaten}, {invoice.deliveryAddress.provinsi}
+              </p>
+            </div>
           </div>
         )}
       </div>
 
-      <div className="invoice-items">
+      <div className="order-items">
         <h3>Order Items</h3>
-        <div className="items-table">
-          <div className="table-header">
-            <span>Item</span>
-            <span>Quantity</span>
-            <span>Price</span>
-            <span>Total</span>
-          </div>
-          {invoice.order?.orderItems?.map((item, index) => (
-            <div key={index} className="table-row">
-              <span>{item.name}</span>
-              <span>{item.qty}</span>
-              <span>{formatPrice(item.price)}</span>
-              <span>{formatPrice(item.price * item.qty)}</span>
+        <div className="items-list">
+          {invoice.items.map((item, index) => (
+            <div key={index} className="order-item">
+              <div className="item-info">
+                <h4>{item.product.name}</h4>
+                <p className="item-quantity">Quantity: {item.quantity}</p>
+                <p className="item-price">Price: Rp {item.price.toLocaleString()}</p>
+              </div>
+              <div className="item-total">
+                Rp {(item.price * item.quantity).toLocaleString()}
+              </div>
             </div>
           ))}
         </div>
       </div>
 
       <div className="invoice-summary">
-        <div className="summary-row">
+        <div className="summary-row subtotal">
           <span>Subtotal</span>
-          <span>{formatPrice(invoice.sub_total)}</span>
+          <span>Rp {invoice.total.toLocaleString()}</span>
         </div>
-        {orderType === 'delivery' && invoice.delivery_fee > 0 && (
-          <div className="summary-row">
+        {invoice.orderType === 'delivery' && (
+          <div className="summary-row delivery-fee">
             <span>Delivery Fee</span>
-            <span>{formatPrice(invoice.delivery_fee)}</span>
+            <span>Rp {(invoice.deliveryFee || 0).toLocaleString()}</span>
           </div>
         )}
         <div className="summary-row total">
           <span>Total Amount</span>
-          <span>{formatPrice(invoice.total)}</span>
+          <span>Rp {((invoice.total || 0) + (invoice.deliveryFee || 0)).toLocaleString()}</span>
         </div>
       </div>
 
       <div className="invoice-footer">
-        <p>Thank you for your order!</p>
-        <p className="footer-note">
-          For any questions about this invoice, please contact our customer service
-        </p>
+        <p className="thank-you">Thank you for your order!</p>
+        <div className="invoice-actions">
+          <button onClick={() => window.print()} className="print-button">
+            <FaPrint /> Print Invoice
+          </button>
+          <button onClick={() => navigate('/')} className="back-button">
+            <FaHome /> Back to Home
+          </button>
+        </div>
       </div>
     </div>
   );

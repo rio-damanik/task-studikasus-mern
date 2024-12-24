@@ -4,260 +4,246 @@
   padding: 2rem;
   background: white;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
-.invoice-actions {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 2rem;
+.invoice-container.delivery {
+  border-top: 5px solid #e53e3e;
 }
 
-.back-button,
-.print-button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.3s;
-}
-
-.back-button {
-  background-color: #f0f0f0;
-  color: #333;
-}
-
-.print-button {
-  background-color: #007bff;
-  color: white;
-}
-
-.back-button:hover {
-  background-color: #e0e0e0;
-}
-
-.print-button:hover {
-  background-color: #0056b3;
-}
-
-.invoice-content {
-  padding: 2rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+.invoice-container.dine-in {
+  border-top: 5px solid #38a169;
 }
 
 .invoice-header {
-  display: flex;
-  justify-content: space-between;
+  text-align: center;
   margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid #eee;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #edf2f7;
 }
 
-.restaurant-info {
-  text-align: left;
+.order-type-icon {
+  margin-bottom: 1rem;
 }
 
-.restaurant-info h1 {
-  font-size: 1.8rem;
-  margin-bottom: 0.5rem;
-  color: #333;
+.order-type-icon svg {
+  color: #4a5568;
 }
 
-.restaurant-name {
-  font-size: 1.2rem;
-  color: #666;
+.delivery .order-type-icon svg {
+  color: #e53e3e;
+}
+
+.dine-in .order-type-icon svg {
+  color: #38a169;
+}
+
+.invoice-header h1 {
+  margin: 0.5rem 0;
+  color: #2d3748;
+  font-size: 2rem;
+}
+
+.invoice-number {
+  color: #718096;
+  font-size: 1.1rem;
   margin: 0.5rem 0;
 }
 
-.restaurant-address {
-  color: #888;
+.invoice-date {
+  color: #718096;
+  font-size: 0.9rem;
 }
 
-.header-icon {
-  font-size: 2rem;
-  color: #007bff;
-  margin-bottom: 1rem;
+.invoice-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #f7fafc;
+  border-radius: 8px;
 }
 
-.invoice-meta {
-  text-align: right;
-}
-
-.invoice-meta p {
-  margin: 0.3rem 0;
-  color: #666;
-}
-
-.delivery-info,
-.customer-info {
-  margin: 2rem 0;
+.order-info,
+.payment-info,
+.delivery-info {
   padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 6px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.delivery-info h2,
-.customer-info h2,
-.order-items h2 {
-  color: #333;
-  margin-bottom: 1rem;
-  font-size: 1.3rem;
+.invoice-details h3 {
+  color: #4a5568;
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
 }
 
-.address-details {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-start;
+.invoice-details p {
+  color: #2d3748;
+  margin: 0.25rem 0;
 }
 
-.address-details .icon {
-  color: #007bff;
-  font-size: 1.5rem;
-  margin-top: 0.2rem;
+.delivery-info .address-details {
+  margin-top: 0.5rem;
 }
 
-.address-label {
-  font-weight: bold;
-  color: #555;
-  margin-bottom: 0.5rem;
-}
-
-.address-text {
-  color: #666;
-  margin: 0.2rem 0;
-}
-
-.order-items table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1rem 0;
-}
-
-.order-items th {
-  background: #f8f9fa;
-  padding: 0.8rem;
-  text-align: left;
-  color: #333;
+.customer-name {
   font-weight: 600;
 }
 
-.order-items td {
-  padding: 0.8rem;
-  border-bottom: 1px solid #eee;
-  color: #666;
+.order-items {
+  margin: 2rem 0;
+}
+
+.order-items h3 {
+  color: #4a5568;
+  margin-bottom: 1rem;
+}
+
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.item-info h4 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.1rem;
+}
+
+.item-quantity,
+.item-price {
+  color: #718096;
+  margin: 0.25rem 0;
+}
+
+.item-total {
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 1.1rem;
 }
 
 .invoice-summary {
   margin-top: 2rem;
-  padding-top: 1rem;
-  border-top: 2px solid #eee;
+  padding: 1.5rem;
+  background: #f7fafc;
+  border-radius: 8px;
 }
 
-.summary-item {
+.summary-row {
   display: flex;
   justify-content: space-between;
-  margin: 0.5rem 0;
-  color: #666;
+  padding: 0.75rem 0;
+  color: #4a5568;
 }
 
-.summary-item.total {
-  font-weight: bold;
-  color: #333;
-  font-size: 1.2rem;
-  margin-top: 1rem;
+.summary-row.delivery-fee {
+  border-top: 1px dashed #e2e8f0;
+  border-bottom: 1px dashed #e2e8f0;
+}
+
+.summary-row.total {
+  margin-top: 0.5rem;
   padding-top: 1rem;
-  border-top: 1px solid #eee;
+  border-top: 2px solid #e2e8f0;
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 1.2rem;
 }
 
-.loading {
-  text-align: center;
-  padding: 2rem;
-  color: #666;
-}
-
-.error {
-  text-align: center;
-  padding: 2rem;
-  color: #dc3545;
-}
-
-@media print {
-  .invoice-actions {
-    display: none;
-  }
-
-  .invoice-container {
-    box-shadow: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .invoice-content {
-    border: none;
-  }
-}
-
-.invoice-content.dine-in {
-  background-color: #f8fff8;
-}
-
-.invoice-content.delivery {
-  background-color: #fff8f8;
-}
-
-.dine-in .header-icon {
-  color: #4CAF50;
-}
-
-.delivery .header-icon {
-  color: #f44336;
-}
-
-.thank-you-message {
-  text-align: center;
+.invoice-footer {
   margin-top: 2rem;
-  padding: 1rem;
-  color: #666;
+  text-align: center;
+}
+
+.thank-you {
+  color: #718096;
   font-style: italic;
+  margin-bottom: 1.5rem;
 }
 
 .invoice-actions {
   display: flex;
   justify-content: center;
   gap: 1rem;
-  margin-top: 2rem;
 }
 
-@media (max-width: 768px) {
+.print-button,
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.print-button {
+  background: #4299e1;
+  color: white;
+}
+
+.back-button {
+  background: #718096;
+  color: white;
+}
+
+.print-button:hover {
+  background: #3182ce;
+}
+
+.back-button:hover {
+  background: #4a5568;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #718096;
+}
+
+.error-message {
+  max-width: 500px;
+  margin: 2rem auto;
+  padding: 1rem;
+  background: #fff5f5;
+  color: #c53030;
+  border-radius: 8px;
+  text-align: center;
+}
+
+@media print {
   .invoice-container {
-    margin: 0.5rem;
+    box-shadow: none;
+    margin: 0;
     padding: 1rem;
   }
 
-  .invoice-content {
-    padding: 1rem;
+  .invoice-actions {
+    display: none;
   }
 
-  .invoice-meta {
-    flex-direction: column;
-    text-align: left;
-  }
-
-  th, td {
-    padding: 0.75rem;
-    font-size: 0.9rem;
-  }
-
-  .restaurant-name {
-    font-size: 1.2rem;
-  }
-
-  .header-icon {
-    font-size: 2rem;
+  .order-item,
+  .order-info,
+  .payment-info,
+  .delivery-info {
+    box-shadow: none;
+    border: 1px solid #e2e8f0;
   }
 }

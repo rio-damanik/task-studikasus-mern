@@ -41,7 +41,8 @@ const Auth = () => {
         if (response.data && !response.data.error) {
           const { token, user } = response.data;
           login(token, user);
-          navigate(user.role === 'admin' ? '/admin/products' : '/');
+          // Redirect all users to home page after login
+          navigate('/');
         } else {
           setError(response.data.message || 'Login failed. Please check your credentials.');
         }
@@ -52,42 +53,24 @@ const Auth = () => {
           return;
         }
 
-        if (formData.password.length < 6) {
-          setError('Password must be at least 6 characters long');
-          setLoading(false);
-          return;
-        }
-
-        const response = await axios.post('http://localhost:3001/api/auth/register', {
+        const response = await axios.post('http://localhost:8000/api/auth/register', {
           full_name: formData.full_name,
           email: formData.email,
           password: formData.password,
           role: formData.role
         });
 
-        if (response.data && !response.data._id) {
-          setError(response.data.message || 'Registration failed. Please check your information.');
+        if (response.data && !response.data.error) {
+          const { token, user } = response.data;
+          login(token, user);
+          navigate('/');
         } else {
-          setIsLogin(true);
-          setFormData({
-            full_name: '',
-            email: '',
-            password: '',
-            confirmPassword: '',
-            role: 'user'
-          });
-          setError('Registration successful! Please login.');
+          setError(response.data.message || 'Registration failed. Please try again.');
         }
       }
     } catch (err) {
       console.error('Auth error:', err);
-      if (err.response) {
-        setError(err.response.data.message || err.response.data.fields?.email || 'Authentication failed. Please try again.');
-      } else if (err.request) {
-        setError('Network error. Please check your connection.');
-      } else {
-        setError('An unexpected error occurred. Please try again.');
-      }
+      setError(err.response?.data?.message || 'An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
