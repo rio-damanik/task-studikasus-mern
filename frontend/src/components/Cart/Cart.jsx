@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaShoppingCart, FaTimes, FaPlus, FaMinus, FaUser } from 'react-icons/fa';
+import { FaShoppingCart, FaTimes, FaPlus, FaMinus, FaUser, FaEdit, FaTrash } from 'react-icons/fa';
 import { useCart } from '../../context/CartContext';
 import { formatRupiah } from '../../utils/formatRupiah';
 import './Cart.css';
 
 const Cart = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { cart, customerName, setCustomerName, updateQuantity, removeFromCart } = useCart();
+  const [isEditing, setIsEditing] = useState(false);
+  const { cart, customerName, setCustomerName, updateQuantity, removeFromCart, clearCart } = useCart();
+  const [editedName, setEditedName] = useState(customerName);
   const navigate = useNavigate();
 
   const toggleCart = () => setIsOpen(!isOpen);
@@ -27,6 +29,27 @@ const Cart = () => {
     return cart.reduce((total, item) => total + (item.product.price * item.quantity), 0);
   };
 
+  const handleEditName = () => {
+    setEditedName(customerName);
+    setIsEditing(true);
+  };
+
+  const handleSaveName = () => {
+    setCustomerName(editedName);
+    setIsEditing(false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditedName(customerName);
+    setIsEditing(false);
+  };
+
+  const handleClearCart = () => {
+    if (window.confirm('Are you sure you want to clear your cart?')) {
+      clearCart();
+    }
+  };
+
   const handleCheckout = () => {
     if (cart.length === 0) {
       alert('Your cart is empty');
@@ -40,7 +63,10 @@ const Cart = () => {
       }
       return;
     }
-    navigate('/order');
+    setIsOpen(false); // Close cart drawer before navigation
+    setTimeout(() => {
+      navigate('/order');
+    }, 300); // Wait for drawer close animation to complete
   };
 
   const formatPrice = (price) => {
@@ -60,30 +86,68 @@ const Cart = () => {
 
       <div className={`cart-drawer ${isOpen ? 'open' : ''}`}>
         <div className="cart-header">
-          <h2>Shopping Cart</h2>
-          <button className="close-button" onClick={toggleCart}>
-            <FaTimes />
-          </button>
+          <h2><FaShoppingCart /> Shopping Cart</h2>
+          <div className="cart-actions">
+            {cart.length > 0 && (
+              <button className="clear-cart-button" onClick={handleClearCart}>
+                <FaTrash />
+              </button>
+            )}
+            <button className="close-button" onClick={toggleCart}>
+              <FaTimes />
+            </button>
+          </div>
         </div>
 
         <div className="cart-items">
           {cart.length === 0 ? (
-            <p className="empty-cart-message">Your cart is empty</p>
+            <div className="empty-cart-message">
+              <FaShoppingCart />
+              <p>Your cart is empty</p>
+            </div>
           ) : (
             <>
               <div className="customer-info">
-                <label htmlFor="customerName" className="customer-label">
-                  <FaUser /> Customer Name
-                </label>
-                <input
-                  type="text"
-                  id="customerName"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="Enter customer name"
-                  className="customer-name-input"
-                  required
-                />
+                {isEditing ? (
+                  <div className="edit-name-form">
+                    <label htmlFor="editName" className="customer-label">
+                      <FaUser /> Customer Name
+                    </label>
+                    <div className="edit-name-input-group">
+                      <input
+                        type="text"
+                        id="editName"
+                        value={editedName}
+                        onChange={(e) => setEditedName(e.target.value)}
+                        placeholder="Enter customer name"
+                        className="customer-name-input"
+                        required
+                      />
+                      <div className="edit-name-actions">
+                        <button className="save-name-button" onClick={handleSaveName}>
+                          Save
+                        </button>
+                        <button className="cancel-edit-button" onClick={handleCancelEdit}>
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="customer-name-display">
+                    <label className="customer-label">
+                      <FaUser /> Customer Name
+                    </label>
+                    <div className="name-with-edit">
+                      <span className="current-name">
+                        {customerName || 'Not set'}
+                      </span>
+                      <button className="edit-name-button" onClick={handleEditName}>
+                        <FaEdit />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {cart.map((item) => (

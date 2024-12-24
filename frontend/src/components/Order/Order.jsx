@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useCart } from '../../context/CartContext';
-import { FaUtensils, FaMotorcycle, FaMoneyBillWave, FaCreditCard, FaUpload, FaMapMarkerAlt, FaUser } from 'react-icons/fa';
+import { FaUtensils, FaMotorcycle, FaMoneyBillWave, FaCreditCard, FaUpload, FaMapMarkerAlt, FaUser, FaTimes } from 'react-icons/fa';
 import { config } from '../../config/config';
 import { formatRupiah } from '../../utils/formatRupiah';
 import './Order.css';
@@ -152,10 +152,20 @@ const Order = () => {
     }
   };
 
+  const handleCancelOrder = () => {
+    if (window.confirm('Are you sure you want to cancel this order? Your cart will be cleared.')) {
+      clearCart();
+      navigate('/');
+    }
+  };
+
   return (
     <div className="order-container">
       <div className="order-header">
         <h1>Checkout</h1>
+        <button className="cancel-order-button" onClick={handleCancelOrder}>
+          <FaTimes /> Cancel Order
+        </button>
       </div>
 
       <div className="order-content">
@@ -185,70 +195,138 @@ const Order = () => {
         </div>
 
         {orderType === 'delivery' && (
-          <div className="order-section">
-            <h2>Delivery Address</h2>
+          <div className="order-section delivery-section">
+            <h2><FaMapMarkerAlt /> Delivery Address</h2>
             {selectedAddress ? (
               <div className="selected-address">
-                <p><strong>Detail:</strong> {selectedAddress.detail}</p>
-                <p><strong>Kelurahan:</strong> {selectedAddress.kelurahan}</p>
-                <p><strong>Kecamatan:</strong> {selectedAddress.kecamatan}</p>
-                <p><strong>Kabupaten:</strong> {selectedAddress.kabupaten}</p>
-                <p><strong>Provinsi:</strong> {selectedAddress.provinsi}</p>
-                <button onClick={() => setShowAddressForm(true)}>Change Address</button>
+                <div className="address-card">
+                  <div className="address-header">
+                    <FaMapMarkerAlt className="address-icon" />
+                    <h3>Delivery Location</h3>
+                  </div>
+                  <div className="address-details">
+                    <p><strong>Detail:</strong> {selectedAddress.detail}</p>
+                    <div className="address-grid">
+                      <div className="address-item">
+                        <span className="label">Kelurahan</span>
+                        <span className="value">{selectedAddress.kelurahan}</span>
+                      </div>
+                      <div className="address-item">
+                        <span className="label">Kecamatan</span>
+                        <span className="value">{selectedAddress.kecamatan}</span>
+                      </div>
+                      <div className="address-item">
+                        <span className="label">Kabupaten</span>
+                        <span className="value">{selectedAddress.kabupaten}</span>
+                      </div>
+                      <div className="address-item">
+                        <span className="label">Provinsi</span>
+                        <span className="value">{selectedAddress.provinsi}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button className="change-address-button" onClick={() => setShowAddressForm(true)}>
+                    <FaMapMarkerAlt /> Change Address
+                  </button>
+                </div>
               </div>
             ) : (
-              <button onClick={() => setShowAddressForm(true)}>
+              <button className="add-address-button" onClick={() => setShowAddressForm(true)}>
                 <FaMapMarkerAlt /> Add Delivery Address
               </button>
             )}
 
             {showAddressForm && (
-              <form onSubmit={handleAddressSubmit} className="address-form">
-                <input
-                  type="text"
-                  name="detail"
-                  value={addressForm.detail}
-                  onChange={handleAddressChange}
-                  placeholder="Address Detail"
-                  required
-                />
-                <input
-                  type="text"
-                  name="kelurahan"
-                  value={addressForm.kelurahan}
-                  onChange={handleAddressChange}
-                  placeholder="Kelurahan"
-                  required
-                />
-                <input
-                  type="text"
-                  name="kecamatan"
-                  value={addressForm.kecamatan}
-                  onChange={handleAddressChange}
-                  placeholder="Kecamatan"
-                  required
-                />
-                <input
-                  type="text"
-                  name="kabupaten"
-                  value={addressForm.kabupaten}
-                  onChange={handleAddressChange}
-                  placeholder="Kabupaten"
-                  required
-                />
-                <input
-                  type="text"
-                  name="provinsi"
-                  value={addressForm.provinsi}
-                  onChange={handleAddressChange}
-                  placeholder="Provinsi"
-                  required
-                />
-                <div className="form-buttons">
-                  <button type="submit">Save Address</button>
-                  <button type="button" onClick={() => setShowAddressForm(false)}>Cancel</button>
-                </div>
-              </form>
+              <div className="address-form-container">
+                <form onSubmit={handleAddressSubmit} className="address-form">
+                  <div className="form-header">
+                    <h3><FaMapMarkerAlt /> Enter Delivery Address</h3>
+                  </div>
+                  <div className="form-fields">
+                    <div className="form-group">
+                      <label>
+                        <span className="label-text">Address Detail</span>
+                        <input
+                          type="text"
+                          name="detail"
+                          value={addressForm.detail}
+                          onChange={handleAddressChange}
+                          placeholder="Enter complete address details"
+                          required
+                        />
+                      </label>
+                    </div>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>
+                          <span className="label-text">Kelurahan</span>
+                          <input
+                            type="text"
+                            name="kelurahan"
+                            value={addressForm.kelurahan}
+                            onChange={handleAddressChange}
+                            placeholder="Enter kelurahan"
+                            required
+                          />
+                        </label>
+                      </div>
+                      <div className="form-group">
+                        <label>
+                          <span className="label-text">Kecamatan</span>
+                          <input
+                            type="text"
+                            name="kecamatan"
+                            value={addressForm.kecamatan}
+                            onChange={handleAddressChange}
+                            placeholder="Enter kecamatan"
+                            required
+                          />
+                        </label>
+                      </div>
+                    </div>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>
+                          <span className="label-text">Kabupaten</span>
+                          <input
+                            type="text"
+                            name="kabupaten"
+                            value={addressForm.kabupaten}
+                            onChange={handleAddressChange}
+                            placeholder="Enter kabupaten"
+                            required
+                          />
+                        </label>
+                      </div>
+                      <div className="form-group">
+                        <label>
+                          <span className="label-text">Provinsi</span>
+                          <input
+                            type="text"
+                            name="provinsi"
+                            value={addressForm.provinsi}
+                            onChange={handleAddressChange}
+                            placeholder="Enter provinsi"
+                            required
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="form-actions">
+                    <button type="submit" className="save-button">
+                      <FaMapMarkerAlt /> Save Address
+                    </button>
+                    <button 
+                      type="button" 
+                      className="cancel-button"
+                      onClick={() => setShowAddressForm(false)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
             )}
           </div>
         )}
@@ -324,13 +402,22 @@ const Order = () => {
 
         {error && <div className="error-message">{error}</div>}
         
-        <button
-          className="place-order-button"
-          onClick={handleSubmitOrder}
-          disabled={loading}
-        >
-          {loading ? 'Processing...' : 'Place Order'}
-        </button>
+        <div className="order-actions">
+          <button
+            className="place-order-button"
+            onClick={handleSubmitOrder}
+            disabled={loading}
+          >
+            {loading ? 'Processing...' : 'Place Order'}
+          </button>
+          <button 
+            className="back-to-cart-button"
+            onClick={() => navigate('/cart')}
+            disabled={loading}
+          >
+            Back to Cart
+          </button>
+        </div>
       </div>
     </div>
   );
