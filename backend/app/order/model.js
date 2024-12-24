@@ -21,27 +21,27 @@ const orderSchema = Schema({
         kelurahan: {
             type: String,
             maxlength: [255, 'Panjang nama kelurahan maksimal 255 karakter'],
-            required: [true, 'Nama kelurahan harus diisi']
+            required: false
         },
         kecamatan: {
             type: String,
             maxlength: [255, 'Panjang nama kecamatan maksimal 255 karakter'],
-            required: [true, 'Nama kecamatan harus diisi']
+            required: false
         },
         kabupaten: {
             type: String,
             maxlength: [255, 'Panjang nama kabupaten maksimal 255 karakter'],
-            required: [true, 'Nama kabupaten harus diisi']
+            required: false
         },
         provinsi: {
             type: String,
             maxlength: [255, 'Panjang nama provinsi maksimal 255 karakter'],
-            required: [true, 'Nama provinsi harus diisi']
+            required: false
         },
         detail: {
             type: String,
             maxlength: [1000, 'Panjang detail alamat maksimal 1000 karakter'],
-            required: [true, 'Detail alamat harus diisi']
+            required: false
         },
     },
     metode_payment: {
@@ -60,21 +60,26 @@ orderSchema.plugin(AutoIncrement, { inc_field: 'order_number' });
 // });
 orderSchema.pre('save', async function (next) {
     const sub_total = this.orderItems.reduce((total, item) => total + (item.price * item.qty), 0);
-    const invoice = new Invoice({
+    const invoiceData = {
         user: this.user,
         order: this._id,
         delivery_fee: this.delivery_fee,
-        delivery_address: {
+        sub_total: sub_total,
+        total: sub_total + this.delivery_fee,
+        metode_payment: this.metode_payment
+    };
+
+    if (this.delivery_address && this.delivery_address.kelurahan) {
+        invoiceData.delivery_address = {
             kelurahan: this.delivery_address.kelurahan,
             kecamatan: this.delivery_address.kecamatan,
             kabupaten: this.delivery_address.kabupaten,
             provinsi: this.delivery_address.provinsi,
             detail: this.delivery_address.detail
-        },
-        sub_total: sub_total,
-        total: sub_total + this.delivery_fee,
-        metode_payment: this.metode_payment
-    });
+        };
+    }
+
+    const invoice = new Invoice(invoiceData);
     await invoice.save();
     next();
 })

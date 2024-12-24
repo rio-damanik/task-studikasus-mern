@@ -75,17 +75,22 @@ const Order = () => {
       }
 
       const orderData = {
-        orderType,
-        paymentMethod,
+        delivery_fee: orderType === 'delivery' ? 10000 : 0,
+        metode_payment: paymentMethod,
         items: cart.map(item => ({
-          product: item.product._id,
-          quantity: item.quantity,
-          price: item.product.price
+          name: item.product.name,
+          price: item.product.price,
+          qty: item.quantity,
+          product: item.product._id
         })),
-        total: calculateTotal(),
         ...(orderType === 'delivery' && selectedAddress && { 
-          deliveryAddress: selectedAddress,
-          deliveryFee: 10000
+          delivery_address: {
+            kelurahan: selectedAddress.kelurahan,
+            kecamatan: selectedAddress.kecamatan,
+            kabupaten: selectedAddress.kabupaten,
+            provinsi: selectedAddress.provinsi,
+            detail: selectedAddress.detail
+          }
         })
       };
 
@@ -96,7 +101,7 @@ const Order = () => {
         Object.keys(orderData).forEach(key => {
           if (key === 'items') {
             formData.append(key, JSON.stringify(orderData[key]));
-          } else if (key === 'deliveryAddress' && orderData[key]) {
+          } else if (key === 'delivery_address' && orderData[key]) {
             formData.append(key, JSON.stringify(orderData[key]));
           } else {
             formData.append(key, orderData[key]);

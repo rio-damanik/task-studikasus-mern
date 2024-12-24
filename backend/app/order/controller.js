@@ -5,29 +5,49 @@ const DeliveryAddress = require('../deliveryAddress/model');
 
 const store = async (req, res, next) => {
     try {
-        const { delivery_address, metode_payment } = req.body;
+        const { delivery_address, metode_payment, delivery_fee = 0 } = req.body;
         if (metode_payment === '') {
             return res.json({
                 error: 1,
                 message: 'Metode payment harus diisi'
             })
         }
-        const delivery_fee = 20000;
+
         const items = await CartItem.findOne({ user: req.user._id }).populate('items.product');
-        const address = await DeliveryAddress.findOne({ _id: delivery_address, user: req.user._id });
-        const order = new Order({
-            delivery_fee: delivery_fee,
-            metode_payment: metode_payment,
-            delivery_address: {
+        if (!items || !items.items || items.items.length === 0) {
+            return res.json({
+                error: 1,
+                message: 'Cart is empty'
+            });
+        }
+
+        let orderData = {
+            delivery_fee,
+            metode_payment,
+            orderItems: [],
+            user: req.user._id
+        };
+
+        // If delivery address is provided, add delivery address details
+        if (delivery_address) {
+            const address = await DeliveryAddress.findOne({ _id: delivery_address, user: req.user._id });
+            if (!address) {
+                return res.json({
+                    error: 1,
+                    message: 'Delivery address not found'
+                });
+            }
+            orderData.delivery_address = {
                 kelurahan: address.kelurahan,
                 kecamatan: address.kecamatan,
                 kabupaten: address.kabupaten,
                 provinsi: address.provinsi,
                 detail: address.detail
-            },
-            orderItems: [],
-            user: req.user._id
-        })
+            };
+        }
+
+        const order = new Order(orderData);
+        
         const orderItems = await OrderItem.insertMany(items.items.map((item) => {
             return {
                 name: item.product.name,
@@ -36,19 +56,17 @@ const store = async (req, res, next) => {
                 order: order._id,
                 product: item.product._id
             }
-        }))
+        }));
+        
         order.orderItems = orderItems;
-
-        order.save();
+        await order.save();
+        
+        // Clear the cart after successful order
         await CartItem.findOneAndUpdate(
-            {
-                user: req.user._id,
-            },
-            {
-                $set: {
-                    items: []
-                }
-            },)
+            { user: req.user._id },
+            { $set: { items: [] } }
+        );
+        
         return res.json(order);
     } catch (error) {
         console.error('Error occurred:', error);
