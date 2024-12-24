@@ -1,15 +1,15 @@
 .order-container {
-  max-width: 800px;
-  margin: 40px auto;
-  padding: 0 20px;
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 0 15px;
 }
 
 .order-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
   border-bottom: 2px solid #e9ecef;
 }
 
@@ -49,11 +49,12 @@
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.08);
   overflow: hidden;
+  transform: scale(0.95);
 }
 
 /* Customer Section */
 .customer-section {
-  padding: 30px;
+  padding: 20px;
   background: linear-gradient(135deg, #2ecc71, #27ae60);
   color: white;
 }
@@ -87,7 +88,7 @@
 
 /* Order Section */
 .order-section {
-  padding: 30px;
+  padding: 20px;
   border-bottom: 1px solid #e9ecef;
 }
 
@@ -527,7 +528,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px;
+  padding: 12px;
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
@@ -608,9 +609,9 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  width: calc(100% - 60px);
-  margin: 30px;
-  padding: 18px;
+  width: calc(100% - 40px);
+  margin: 20px;
+  padding: 15px;
   background: linear-gradient(135deg, #2ecc71, #27ae60);
   color: white;
   border: none;
