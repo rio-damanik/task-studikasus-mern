@@ -5,16 +5,16 @@ const DeliveryAddress = require('../deliveryAddress/model');
 
 const store = async (req, res, next) => {
     try {
-        const { delivery_address, metode_payment, delivery_fee = 0 } = req.body;
-        if (metode_payment === '') {
+        const { delivery_address, metode_payment, delivery_fee = 0, customer_name } = req.body;
+        if (!metode_payment) {
             return res.json({
                 error: 1,
-                message: 'Metode payment harus diisi'
-            })
+                message: 'Payment method is required'
+            });
         }
 
-        const items = await CartItem.findOne({ user: req.user._id }).populate('items.product');
-        if (!items || !items.items || items.items.length === 0) {
+        const cart = await CartItem.find({ user: req.user._id }).populate('product');
+        if (!cart || cart.length === 0) {
             return res.json({
                 error: 1,
                 message: 'Cart is empty'
@@ -24,13 +24,14 @@ const store = async (req, res, next) => {
         let orderData = {
             delivery_fee,
             metode_payment,
-            orderItems: [],
-            user: req.user._id
+            customer_name,
+            user: req.user._id,
+            status: 'waiting payment'
         };
 
         // If delivery address is provided, add delivery address details
         if (delivery_address) {
-            const address = await DeliveryAddress.findOne({ _id: delivery_address, user: req.user._id });
+            const address = await DeliveryAddress.findById(delivery_address);
             if (!address) {
                 return res.json({
                     error: 1,
@@ -46,30 +47,35 @@ const store = async (req, res, next) => {
             };
         }
 
+        // Create order
         const order = new Order(orderData);
-        
-        const orderItems = await OrderItem.insertMany(items.items.map((item) => {
-            return {
+
+        // Create order items
+        const orderItems = await OrderItem.insertMany(
+            cart.map(item => ({
                 name: item.product.name,
                 price: item.product.price,
                 qty: item.qty,
-                order: order._id,
-                product: item.product._id
-            }
-        }));
-        
-        order.orderItems = orderItems;
-        await order.save();
-        
-        // Clear the cart after successful order
-        await CartItem.findOneAndUpdate(
-            { user: req.user._id },
-            { $set: { items: [] } }
+                product: item.product._id,
+                order: order._id
+            }))
         );
-        
-        return res.json(order);
+
+        // Add order items to order
+        order.orderItems = orderItems.map(item => item._id);
+        await order.save();
+
+        // Clear cart
+        await CartItem.deleteMany({ user: req.user._id });
+
+        // Return populated order
+        const populatedOrder = await Order.findById(order._id)
+            .populate('orderItems')
+            .populate('user', 'full_name');
+
+        return res.json(populatedOrder);
     } catch (error) {
-        console.error('Error occurred:', error);
+        console.error('Error in store:', error);
         if (error.name === 'ValidationError') {
             return res.json({
                 error: 1,
@@ -125,9 +131,36 @@ const update = async (req, res, next) => {
     }
 }
 
+const show = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const order = await Order.findOne({ _id: id })
+            .populate('orderItems')
+            .populate('user', 'full_name');
+
+        if (!order) {
+            return res.json({
+                error: 1,
+                message: 'Order not found'
+            });
+        }
+
+        return res.json(order);
+    } catch (error) {
+        if (error && error.name === 'ValidationError') {
+            return res.json({
+                error: 1,
+                message: error.message,
+                fields: error.errors
+            });
+        }
+        next(error);
+    }
+};
 
 module.exports = {
     store,
     index,
-    update
+    update,
+    show
 }

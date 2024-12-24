@@ -10,9 +10,12 @@ router.get('/order',
     police_check('read', 'Order'),
     orderController.index);
 
+router.get('/order/:id',
+    police_check('read', 'Order'),
+    orderController.show);
+
 router.put('/order/:id',
     police_check('update', 'Order'),
     orderController.update);
-
 
 module.exports = router;
