@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useCart } from '../../context/CartContext';
-import { FaUtensils, FaMotorcycle, FaMoneyBillWave, FaCreditCard, FaUpload, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaUtensils, FaMotorcycle, FaMoneyBillWave, FaCreditCard, FaUpload, FaMapMarkerAlt, FaUser } from 'react-icons/fa';
+import { config } from '../../config/config';
+import { formatRupiah } from '../../utils/formatRupiah';
 import './Order.css';
 
 const Order = () => {
   const navigate = useNavigate();
-  const { cart, clearCart } = useCart();
+  const { cart, clearCart, customerName } = useCart();
   const [orderType, setOrderType] = useState('dine-in');
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [showAddressForm, setShowAddressForm] = useState(false);
@@ -24,6 +26,17 @@ const Order = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    if (!cart || cart.length === 0) {
+      navigate('/cart');
+      return;
+    }
+    if (!customerName.trim()) {
+      navigate('/cart');
+      return;
+    }
+  }, [cart, customerName, navigate]);
+
   const handleAddressChange = (e) => {
     const { name, value } = e.target;
     setAddressForm(prev => ({
@@ -38,43 +51,52 @@ const Order = () => {
     setShowAddressForm(false);
   };
 
-  const calculateSubtotal = () => {
+  const handleTransferProofChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      setTransferProof(file);
+      setError('');
+    } else {
+      setError('Please upload a valid image file');
+      e.target.value = '';
+    }
+  };
+
+  const getSubtotal = () => {
     return cart.reduce((total, item) => total + (item.product.price * item.quantity), 0);
   };
 
-  const calculateTotal = () => {
-    const subtotal = calculateSubtotal();
-    const deliveryFee = orderType === 'delivery' ? 10000 : 0;
+  const getDeliveryFee = () => {
+    return orderType === 'delivery' ? 10000 : 0;
+  };
+
+  const getTotal = () => {
+    const subtotal = getSubtotal();
+    const deliveryFee = getDeliveryFee();
     return subtotal + deliveryFee;
   };
 
-  const handlePlaceOrder = async () => {
-    if (!cart.length) {
-      setError('Your cart is empty');
-      return;
+  const formatPrice = (price) => {
+    try {
+      return formatRupiah(price);
+    } catch (error) {
+      return `Rp ${price.toLocaleString('id-ID')}`;
     }
+  };
 
-    if (orderType === 'delivery' && !selectedAddress) {
-      setError('Please select a delivery address');
-      return;
-    }
-
-    if (paymentMethod === 'transfer' && !transferProof) {
-      setError('Please upload transfer proof');
-      return;
-    }
+  const handleSubmitOrder = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
 
     try {
-      setLoading(true);
-      setError('');
-
       const token = localStorage.getItem('token');
       if (!token) {
-        navigate('/login', { state: { from: '/order' } });
-        return;
+        throw new Error('Authentication required');
       }
 
       const orderData = {
+        customer_name: customerName,
         delivery_fee: orderType === 'delivery' ? 10000 : 0,
         metode_payment: paymentMethod,
         items: cart.map(item => ({
@@ -82,40 +104,33 @@ const Order = () => {
           price: item.product.price,
           qty: item.quantity,
           product: item.product._id
-        })),
-        ...(orderType === 'delivery' && selectedAddress && { 
-          delivery_address: {
-            kelurahan: selectedAddress.kelurahan,
-            kecamatan: selectedAddress.kecamatan,
-            kabupaten: selectedAddress.kabupaten,
-            provinsi: selectedAddress.provinsi,
-            detail: selectedAddress.detail
-          }
-        })
+        }))
       };
+
+      if (orderType === 'delivery' && selectedAddress) {
+        orderData.delivery_address = selectedAddress;
+      }
 
       let response;
       if (paymentMethod === 'transfer' && transferProof) {
         const formData = new FormData();
         formData.append('transferProof', transferProof);
         Object.keys(orderData).forEach(key => {
-          if (key === 'items') {
-            formData.append(key, JSON.stringify(orderData[key]));
-          } else if (key === 'delivery_address' && orderData[key]) {
+          if (typeof orderData[key] === 'object') {
             formData.append(key, JSON.stringify(orderData[key]));
           } else {
             formData.append(key, orderData[key]);
           }
         });
 
-        response = await axios.post('http://localhost:8000/api/orders', formData, {
+        response = await axios.post(config.endpoints.orders, formData, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
           }
         });
       } else {
-        response = await axios.post('http://localhost:8000/api/orders', orderData, {
+        response = await axios.post(config.endpoints.orders, orderData, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -140,30 +155,32 @@ const Order = () => {
   return (
     <div className="order-container">
       <div className="order-header">
-        <h1>Complete Your Order</h1>
-        <p>Please select your order type and payment method</p>
+        <h1>Checkout</h1>
       </div>
 
       <div className="order-content">
+        <div className="customer-section">
+          <h2><FaUser /> Customer Information</h2>
+          <div className="customer-info">
+            <p className="customer-name">Customer Name: {customerName}</p>
+          </div>
+        </div>
+
         <div className="order-section">
           <h2>Order Type</h2>
           <div className="order-type-options">
-            <div 
-              className={`order-type-option ${orderType === 'dine-in' ? 'selected' : ''}`}
+            <button
+              className={`order-type-button ${orderType === 'dine-in' ? 'active' : ''}`}
               onClick={() => setOrderType('dine-in')}
             >
-              <FaUtensils className="option-icon" />
-              <h3>Dine In</h3>
-              <p>Eat at our restaurant</p>
-            </div>
-            <div 
-              className={`order-type-option ${orderType === 'delivery' ? 'selected' : ''}`}
+              <FaUtensils /> Dine In
+            </button>
+            <button
+              className={`order-type-button ${orderType === 'delivery' ? 'active' : ''}`}
               onClick={() => setOrderType('delivery')}
             >
-              <FaMotorcycle className="option-icon" />
-              <h3>Delivery</h3>
-              <p>Delivered to your address</p>
-            </div>
+              <FaMotorcycle /> Delivery
+            </button>
           </div>
         </div>
 
@@ -172,110 +189,66 @@ const Order = () => {
             <h2>Delivery Address</h2>
             {selectedAddress ? (
               <div className="selected-address">
-                <div className="address-info">
-                  <h3>{selectedAddress.nama}</h3>
-                  <p>{selectedAddress.detail}</p>
-                  <p>{selectedAddress.kelurahan}, {selectedAddress.kecamatan}</p>
-                  <p>{selectedAddress.kabupaten}, {selectedAddress.provinsi}</p>
-                </div>
-                <button 
-                  className="change-address-button"
-                  onClick={() => setShowAddressForm(true)}
-                >
-                  <FaMapMarkerAlt /> Change Address
-                </button>
+                <p><strong>Detail:</strong> {selectedAddress.detail}</p>
+                <p><strong>Kelurahan:</strong> {selectedAddress.kelurahan}</p>
+                <p><strong>Kecamatan:</strong> {selectedAddress.kecamatan}</p>
+                <p><strong>Kabupaten:</strong> {selectedAddress.kabupaten}</p>
+                <p><strong>Provinsi:</strong> {selectedAddress.provinsi}</p>
+                <button onClick={() => setShowAddressForm(true)}>Change Address</button>
               </div>
-            ) : showAddressForm ? (
-              <form onSubmit={handleAddressSubmit} className="address-form">
-                <div className="form-group">
-                  <label htmlFor="nama">Name</label>
-                  <input
-                    type="text"
-                    id="nama"
-                    name="nama"
-                    value={addressForm.nama}
-                    onChange={handleAddressChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="detail">Address Detail</label>
-                  <textarea
-                    id="detail"
-                    name="detail"
-                    value={addressForm.detail}
-                    onChange={handleAddressChange}
-                    required
-                  />
-                </div>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="kelurahan">Kelurahan</label>
-                    <input
-                      type="text"
-                      id="kelurahan"
-                      name="kelurahan"
-                      value={addressForm.kelurahan}
-                      onChange={handleAddressChange}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="kecamatan">Kecamatan</label>
-                    <input
-                      type="text"
-                      id="kecamatan"
-                      name="kecamatan"
-                      value={addressForm.kecamatan}
-                      onChange={handleAddressChange}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="kabupaten">Kabupaten</label>
-                    <input
-                      type="text"
-                      id="kabupaten"
-                      name="kabupaten"
-                      value={addressForm.kabupaten}
-                      onChange={handleAddressChange}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="provinsi">Provinsi</label>
-                    <input
-                      type="text"
-                      id="provinsi"
-                      name="provinsi"
-                      value={addressForm.provinsi}
-                      onChange={handleAddressChange}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="form-actions">
-                  <button type="submit" className="save-address-button">
-                    Save Address
-                  </button>
-                  <button 
-                    type="button" 
-                    className="cancel-button"
-                    onClick={() => setShowAddressForm(false)}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
             ) : (
-              <button 
-                className="add-address-button"
-                onClick={() => setShowAddressForm(true)}
-              >
+              <button onClick={() => setShowAddressForm(true)}>
                 <FaMapMarkerAlt /> Add Delivery Address
               </button>
+            )}
+
+            {showAddressForm && (
+              <form onSubmit={handleAddressSubmit} className="address-form">
+                <input
+                  type="text"
+                  name="detail"
+                  value={addressForm.detail}
+                  onChange={handleAddressChange}
+                  placeholder="Address Detail"
+                  required
+                />
+                <input
+                  type="text"
+                  name="kelurahan"
+                  value={addressForm.kelurahan}
+                  onChange={handleAddressChange}
+                  placeholder="Kelurahan"
+                  required
+                />
+                <input
+                  type="text"
+                  name="kecamatan"
+                  value={addressForm.kecamatan}
+                  onChange={handleAddressChange}
+                  placeholder="Kecamatan"
+                  required
+                />
+                <input
+                  type="text"
+                  name="kabupaten"
+                  value={addressForm.kabupaten}
+                  onChange={handleAddressChange}
+                  placeholder="Kabupaten"
+                  required
+                />
+                <input
+                  type="text"
+                  name="provinsi"
+                  value={addressForm.provinsi}
+                  onChange={handleAddressChange}
+                  placeholder="Provinsi"
+                  required
+                />
+                <div className="form-buttons">
+                  <button type="submit">Save Address</button>
+                  <button type="button" onClick={() => setShowAddressForm(false)}>Cancel</button>
+                </div>
+              </form>
             )}
           </div>
         )}
@@ -283,80 +256,68 @@ const Order = () => {
         <div className="order-section">
           <h2>Payment Method</h2>
           <div className="payment-options">
-            <div 
-              className={`payment-option ${paymentMethod === 'cash' ? 'selected' : ''}`}
+            <button
+              className={`payment-button ${paymentMethod === 'cash' ? 'active' : ''}`}
               onClick={() => setPaymentMethod('cash')}
             >
-              <FaMoneyBillWave className="option-icon" />
-              <h3>Cash</h3>
-              <p>Pay with cash on delivery/pickup</p>
-            </div>
-            <div 
-              className={`payment-option ${paymentMethod === 'transfer' ? 'selected' : ''}`}
+              <FaMoneyBillWave /> Cash
+            </button>
+            <button
+              className={`payment-button ${paymentMethod === 'transfer' ? 'active' : ''}`}
               onClick={() => setPaymentMethod('transfer')}
             >
-              <FaCreditCard className="option-icon" />
-              <h3>Bank Transfer</h3>
-              <p>Pay via bank transfer</p>
-            </div>
+              <FaCreditCard /> Transfer
+            </button>
           </div>
 
           {paymentMethod === 'transfer' && (
             <div className="transfer-proof-section">
               <h3>Upload Transfer Proof</h3>
-              <div className="upload-area">
-                <label htmlFor="transfer-proof">
-                  <FaUpload className="upload-icon" />
-                  <span>Click to upload proof of payment</span>
+              <div className="file-upload">
+                <label className="file-upload-label">
+                  <FaUpload />
+                  <span>Choose File</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleTransferProofChange}
+                    required
+                  />
                 </label>
-                <input
-                  id="transfer-proof"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setTransferProof(e.target.files[0])}
-                />
+                {transferProof && <p>File selected: {transferProof.name}</p>}
               </div>
-              {transferProof && (
-                <p className="file-name">Selected: {transferProof.name}</p>
-              )}
             </div>
           )}
         </div>
 
-        <div className="order-section">
+        <div className="order-summary">
           <h2>Order Summary</h2>
-          <div className="cart-items">
-            {cart.map((item, index) => (
-              <div key={index} className="cart-item">
-                <div className="item-image">
-                  <img src={item.product.image} alt={item.product.name} />
+          <div className="order-items">
+            {cart.map((item) => (
+              <div key={item.product._id} className="order-item">
+                <div className="item-info">
+                  <span className="item-name">{item.product.name}</span>
+                  <span className="item-quantity">x{item.quantity}</span>
                 </div>
-                <div className="item-details">
-                  <h3>{item.product.name}</h3>
-                  <p className="item-quantity">Quantity: {item.quantity}</p>
-                  <p className="item-price">Rp {item.product.price.toLocaleString()}</p>
-                </div>
-                <div className="item-total">
-                  Rp {(item.product.price * item.quantity).toLocaleString()}
-                </div>
+                <span className="item-price">{formatPrice(item.product.price * item.quantity)}</span>
               </div>
             ))}
           </div>
 
-          <div className="order-summary">
-            <div className="summary-row">
+          <div className="order-totals">
+            <div className="subtotal">
               <span>Subtotal</span>
-              <span>Rp {calculateSubtotal().toLocaleString()}</span>
+              <span>{formatPrice(getSubtotal())}</span>
             </div>
             {orderType === 'delivery' && (
-              <div className="summary-row">
+              <div className="delivery-fee">
                 <span>Delivery Fee</span>
-                <span>Rp 10,000</span>
+                <span>{formatPrice(getDeliveryFee())}</span>
               </div>
             )}
-            <div className="summary-row total">
+            <div className="total">
               <span>Total</span>
-              <span>Rp {calculateTotal().toLocaleString()}</span>
+              <span>{formatPrice(getTotal())}</span>
             </div>
           </div>
         </div>
@@ -365,7 +326,7 @@ const Order = () => {
         
         <button
           className="place-order-button"
-          onClick={handlePlaceOrder}
+          onClick={handleSubmitOrder}
           disabled={loading}
         >
           {loading ? 'Processing...' : 'Place Order'}

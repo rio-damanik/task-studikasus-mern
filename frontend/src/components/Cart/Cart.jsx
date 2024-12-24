@@ -1,38 +1,30 @@
 import React, { useState } from 'react';
-import { FaShoppingCart, FaTimes, FaPlus, FaMinus, FaUser } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { FaShoppingCart, FaTimes, FaPlus, FaMinus, FaUser } from 'react-icons/fa';
 import { useCart } from '../../context/CartContext';
+import { formatRupiah } from '../../utils/formatRupiah';
 import './Cart.css';
 
-const formatRupiah = (number) => {
-  return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(number);
-};
-
 const Cart = () => {
-  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const {
-    cart,
-    updateQuantity,
-    removeFromCart,
-    getTotalPrice,
-    customerName,
-    setCustomerName
-  } = useCart();
+  const { cart, customerName, setCustomerName, updateQuantity, removeFromCart } = useCart();
+  const navigate = useNavigate();
 
-  const toggleCart = () => {
-    setIsOpen(!isOpen);
-  };
+  const toggleCart = () => setIsOpen(!isOpen);
 
-  const handleUpdateQuantity = (productId, currentQuantity, change) => {
-    const newQuantity = currentQuantity + change;
-    if (newQuantity >= 1) {
-      updateQuantity(productId, newQuantity);
+  const handleUpdateQuantity = (productId, currentQty, change) => {
+    const newQty = currentQty + change;
+    if (newQty >= 1) {
+      updateQuantity(productId, newQty);
     }
   };
 
   const handleRemoveItem = (productId) => {
     removeFromCart(productId);
+  };
+
+  const getTotalPrice = () => {
+    return cart.reduce((total, item) => total + (item.product.price * item.quantity), 0);
   };
 
   const handleCheckout = () => {
@@ -42,16 +34,28 @@ const Cart = () => {
     }
     if (!customerName.trim()) {
       alert('Please enter customer name');
+      const customerNameInput = document.getElementById('customerName');
+      if (customerNameInput) {
+        customerNameInput.focus();
+      }
       return;
     }
     navigate('/order');
-    setIsOpen(false);
+  };
+
+  const formatPrice = (price) => {
+    try {
+      return formatRupiah(price);
+    } catch (error) {
+      return `Rp ${price.toLocaleString('id-ID')}`;
+    }
   };
 
   return (
     <>
       <button className="cart-toggle" onClick={toggleCart}>
         <FaShoppingCart />
+        <span className="cart-badge">{cart.length}</span>
       </button>
 
       <div className={`cart-drawer ${isOpen ? 'open' : ''}`}>
@@ -68,29 +72,31 @@ const Cart = () => {
           ) : (
             <>
               <div className="customer-info">
-                <label className="customer-label" htmlFor="customerName">CUSTOMER NAME</label>
-                <div className="input-group">
-                  <FaUser className="input-icon" />
-                  <input
-                    type="text"
-                    id="customerName"
-                    placeholder="Enter customer name"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    className="customer-name-input"
-                  />
-                </div>
+                <label htmlFor="customerName" className="customer-label">
+                  <FaUser /> Customer Name
+                </label>
+                <input
+                  type="text"
+                  id="customerName"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder="Enter customer name"
+                  className="customer-name-input"
+                  required
+                />
               </div>
+
               {cart.map((item) => (
                 <div key={item.product._id} className="cart-item">
                   <div className="item-details">
                     <h3 className="item-name">{item.product.name}</h3>
-                    <p className="item-price">{formatRupiah(item.product.price)}</p>
+                    <p className="item-price">{formatPrice(item.product.price)}</p>
                   </div>
                   <div className="quantity-controls">
                     <button
                       className="quantity-button"
                       onClick={() => handleUpdateQuantity(item.product._id, item.quantity, -1)}
+                      disabled={item.quantity <= 1}
                     >
                       <FaMinus />
                     </button>
@@ -104,9 +110,12 @@ const Cart = () => {
                     <button
                       className="remove-button"
                       onClick={() => handleRemoveItem(item.product._id)}
-                    >x
-                      <FaTimes size={16} />
+                    >
+                      <FaTimes />
                     </button>
+                  </div>
+                  <div className="item-subtotal">
+                    Subtotal: {formatPrice(item.product.price * item.quantity)}
                   </div>
                 </div>
               ))}
@@ -117,12 +126,12 @@ const Cart = () => {
         <div className="cart-footer">
           <div className="cart-total">
             <span>Total:</span>
-            <span>{formatRupiah(getTotalPrice())}</span>
+            <span>{formatPrice(getTotalPrice())}</span>
           </div>
           <button
             className="checkout-button"
             onClick={handleCheckout}
-            disabled={cart.length === 0}
+            disabled={cart.length === 0 || !customerName.trim()}
           >
             Proceed to Checkout
           </button>
