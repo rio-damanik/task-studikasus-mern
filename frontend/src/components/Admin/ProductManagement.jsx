@@ -19,6 +19,7 @@ const ProductManagement = () => {
     description: '',
     price: '',
     category: '',
+    stock: '',
     image: null
   });
 
@@ -117,6 +118,7 @@ const ProductManagement = () => {
       formDataToSend.append('description', formData.description);
       formDataToSend.append('price', formData.price);
       formDataToSend.append('category', formData.category);
+      formDataToSend.append('stock', formData.stock);
       
       selectedTags.forEach(tagId => {
         formDataToSend.append('tags[]', tagId);
@@ -148,7 +150,7 @@ const ProductManagement = () => {
         );
       }
 
-      await fetchProducts();
+      await fetchProducts(); // Refresh the product list
       resetForm();
       setError('');
     } catch (err) {
@@ -166,7 +168,7 @@ const ProductManagement = () => {
       description: product.description,
       price: product.price,
       category: product.category?._id || '',
-      image: null
+      stock: product.stock
     });
     setSelectedTags(product.tags?.map(tag => tag._id) || []);
     setImagePreview(product.image_url);
@@ -181,7 +183,7 @@ const ProductManagement = () => {
     try {
       setLoading(true);
       await axios.delete(`http://localhost:8000/api/products/${productId}`);
-      await fetchProducts();
+      await fetchProducts(); // Refresh the product list
       setError('');
     } catch (err) {
       setError('Failed to delete product');
@@ -198,6 +200,7 @@ const ProductManagement = () => {
       description: '',
       price: '',
       category: '',
+      stock: '',
       image: null
     });
     setSelectedTags([]);
@@ -265,6 +268,7 @@ const ProductManagement = () => {
                 <h3>{product.name}</h3>
                 <p className="description">{product.description}</p>
                 <p className="price">IDR {formatPrice(product.price)}</p>
+                <p className="stock">Stock: {product.stock}</p>
                 <div className="product-actions">
                   <button 
                     className="edit-btn"
@@ -347,6 +351,19 @@ const ProductManagement = () => {
                       required
                       min="0"
                       placeholder="Enter price"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Stock</label>
+                    <input
+                      type="number"
+                      name="stock"
+                      value={formData.stock}
+                      onChange={handleInputChange}
+                      required
+                      min="0"
+                      placeholder="Enter stock quantity"
                     />
                   </div>
                 </div>
