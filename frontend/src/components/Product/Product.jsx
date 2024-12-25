@@ -16,10 +16,21 @@ const Product = () => {
     { _id: 'minuman', name: 'Minuman' },
     { _id: 'dessert', name: 'Dessert' }
   ]);
-  const [tags, setTags] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedTag, setSelectedTag] = useState('all');
   const { addToCart: addToCartContext } = useCart();
+
+  // Data tag statis
+  const tags = [
+    { _id: 'tag1', name: 'Pedas' },
+    { _id: 'tag2', name: 'Dingin' },
+    { _id: 'tag3', name: 'Vegetarian' },
+    { _id: 'tag4', name: 'Halal' },
+    { _id: 'tag5', name: 'Goreng' },
+    { _id: 'tag6', name: 'Berkuah' },
+    { _id: 'tag7', name: 'Bakar' },
+    { _id: 'tag8', name: 'Populer' }
+  ];
 
   const getTagIcon = (tag) => {
     switch (tag.toLowerCase()) {
@@ -40,23 +51,22 @@ const Product = () => {
       case 'populer':
         return <MdLocalDining />;
       default:
-        return null;
+        return <FaTag />;
     }
   };
 
   const getTagColor = (tagName) => {
     const tagColors = {
-      'Pedas': '#ff4d4d',
-      'Populer': '#ffd700',
-      'Dingin': '#00bfff',
-      'Vegetarian': '#32cd32',
-      'Halal': '#4caf50',
-      'Goreng': '#ff8c00',
-      'Berkuah': '#4169e1',
-      'Bakar': '#ff6b6b',
-      'Seafood': '#00ced1'
+      'pedas': '#ff4d4d',
+      'populer': '#ffd700',
+      'dingin': '#00bfff',
+      'vegetarian': '#32cd32',
+      'halal': '#4caf50',
+      'goreng': '#ff8c00',
+      'berkuah': '#4169e1',
+      'bakar': '#ff6b6b'
     };
-    return tagColors[tagName] || '#808080';
+    return tagColors[tagName.toLowerCase()] || '#808080';
   };
 
   useEffect(() => {
@@ -97,6 +107,12 @@ const Product = () => {
               product.category = { _id: '656c0eb807d3e9dbe63afa96', name: 'Dessert' };
             }
           }
+          // Menambahkan tag statis ke setiap produk
+          product.tags = [
+            tags[Math.floor(Math.random() * 3)], // Tambahkan 1-3 tag random
+            tags[Math.floor(Math.random() * 3) + 3],
+            tags[Math.floor(Math.random() * 2) + 6]
+          ];
           return product;
         });
         
@@ -106,11 +122,6 @@ const Product = () => {
         const categoriesRes = await fetch('http://localhost:8000/api/categories');
         const categoriesData = await categoriesRes.json();
         setCategories(categoriesData || []);
-
-        // Fetch tags
-        const tagsRes = await fetch('http://localhost:8000/api/tags');
-        const tagsData = await tagsRes.json();
-        setTags(tagsData || []);
 
       } catch (err) {
         console.error('Error fetching data:', err);
@@ -174,8 +185,8 @@ const Product = () => {
             {tags.map(tag => (
               <button 
                 key={tag._id}
-                className={`filter-button ${selectedTag === tag._id ? 'active' : ''}`}
-                onClick={() => setSelectedTag(tag._id)}
+                className={`filter-button tag ${selectedTag === tag._id ? 'active' : ''}`}
+                onClick={() => handleTagClick(tag._id)}
                 style={{
                   backgroundColor: selectedTag === tag._id ? getTagColor(tag.name) : 'transparent',
                   color: selectedTag === tag._id ? 'white' : getTagColor(tag.name),
@@ -202,28 +213,26 @@ const Product = () => {
                 <div className="pos-category">
                   <MdCategory /> {product.category?.name || 'Uncategorized'}
                 </div>
+                <div className="pos-tags">
+                  {product.tags?.map(tag => (
+                    <button
+                      key={tag._id}
+                      className={`pos-tag-button ${selectedTag === tag._id ? 'active' : ''}`}
+                      onClick={() => handleTagClick(tag._id)}
+                      style={{
+                        backgroundColor: selectedTag === tag._id ? getTagColor(tag.name) : 'transparent',
+                        color: selectedTag === tag._id ? 'white' : getTagColor(tag.name),
+                        borderColor: getTagColor(tag.name)
+                      }}
+                    >
+                      {getTagIcon(tag.name)} {tag.name}
+                    </button>
+                  ))}
+                </div>
                 <h3>{product.name}</h3>
                 <p className="pos-description">{product.description}</p>
               </div>
               <div className="pos-content">
-                {Array.isArray(product.tags) && product.tags.length > 0 && (
-                  <div className="pos-tags">
-                    {product.tags.map(tag => (
-                      <button
-                        key={tag._id}
-                        className={`pos-tag-button ${selectedTag === tag._id ? 'active' : ''}`}
-                        onClick={() => handleTagClick(tag._id)}
-                        style={{
-                          backgroundColor: selectedTag === tag._id ? getTagColor(tag.name) : 'transparent',
-                          color: selectedTag === tag._id ? 'white' : getTagColor(tag.name),
-                          borderColor: getTagColor(tag.name)
-                        }}
-                      >
-                        {getTagIcon(tag.name)} {tag.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
                 <div className="pos-footer">
                   <span className="pos-price">{formatRupiah(product.price)}</span>
                   <button 

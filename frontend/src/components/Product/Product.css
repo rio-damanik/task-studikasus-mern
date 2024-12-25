@@ -140,35 +140,34 @@
 .pos-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #eee;
+  gap: 4px;
+  margin: 8px 0;
 }
 
 .pos-tag-button {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  background: transparent;
-  border-radius: 16px;
-  font-size: 0.85rem;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
   border: 1px solid;
+  background: transparent;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+}
+
+.pos-tag-button svg {
+  margin-right: 4px;
+  font-size: 0.9rem;
 }
 
 .pos-tag-button:hover {
-  opacity: 0.9;
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .pos-tag-button.active {
-  color: white !important;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transform: scale(1.05);
 }
 
 .pos-footer {
@@ -275,6 +274,29 @@
   100% {
     transform: scale(1.05);
   }
+}
+
+/* Tag filter styles */
+.filter-section .tag {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.filter-section .tag:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.filter-section .tag.active {
+  transform: scale(1.05);
+}
+
+.filter-section .tag svg {
+  margin-right: 6px;
+  font-size: 1rem;
 }
 
 @media (max-width: 768px) {
