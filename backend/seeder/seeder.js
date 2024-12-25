@@ -12,7 +12,11 @@ const tags = [
   { _id: "656c0eb807d3e9dbe63afa91", name: "Populer" },
   { _id: "656c0eb807d3e9dbe63afa93", name: "Dingin" },
   { _id: "656c0eb807d3e9dbe63afa94", name: "Vegetarian" },
-  { _id: "656c0eb807d3e9dbe63afa95", name: "Halal" }
+  { _id: "656c0eb807d3e9dbe63afa95", name: "Halal" },
+  { _id: "656c0eb807d3e9dbe63afa97", name: "Goreng" },
+  { _id: "656c0eb807d3e9dbe63afa98", name: "Berkuah" },
+  { _id: "656c0eb807d3e9dbe63afa99", name: "Bakar" },
+  { _id: "656c0eb807d3e9dbe63afa9a", name: "Seafood" }
 ];
 
 // Categories data
@@ -20,7 +24,8 @@ const categories = [
   {
     _id: "656c0eb807d3e9dbe63afa89",
     name: "Makanan",
-    tags: ["656c0eb807d3e9dbe63afa90", "656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa94", "656c0eb807d3e9dbe63afa95"]
+    tags: ["656c0eb807d3e9dbe63afa90", "656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa94", "656c0eb807d3e9dbe63afa95", 
+           "656c0eb807d3e9dbe63afa97", "656c0eb807d3e9dbe63afa98", "656c0eb807d3e9dbe63afa99", "656c0eb807d3e9dbe63afa9a"]
   },
   {
     _id: "656c0eb807d3e9dbe63afa92",
@@ -68,7 +73,7 @@ const products = [
     price: 25000,
     image_url: "https://images.unsplash.com/photo-1512058564366-18510be2db19?w=500",
     category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa90"]
+    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa97", "656c0eb807d3e9dbe63afa95"]
   },
   {
     name: "Mie Goreng Seafood",
@@ -76,7 +81,7 @@ const products = [
     price: 28000,
     image_url: "https://images.unsplash.com/photo-1585032226651-759b368d7246?w=500",
     category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa90"]
+    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa97", "656c0eb807d3e9dbe63afa9a", "656c0eb807d3e9dbe63afa95"]
   },
   {
     name: "Sop Buntut",
@@ -84,7 +89,7 @@ const products = [
     price: 45000,
     image_url: "/images/products/sop-buntut.png",
     category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa95"]
+    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa98", "656c0eb807d3e9dbe63afa95"]
   },
   {
     name: "Ikan Bakar Kecap",
@@ -92,7 +97,7 @@ const products = [
     price: 65000,
     image_url: "/images/products/ikan-bakar.png",
     category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa95"]
+    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa99", "656c0eb807d3e9dbe63afa9a", "656c0eb807d3e9dbe63afa95"]
   },
   {
     name: "Ayam Goreng Crispy",
@@ -100,7 +105,7 @@ const products = [
     price: 30000,
     image_url: "/images/products/ayam-crispy.png",
     category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa95"]
+    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa97", "656c0eb807d3e9dbe63afa95"]
   },
   {
     name: "Ayam Bakar",
@@ -108,7 +113,7 @@ const products = [
     price: 45000,
     image_url: "https://images.unsplash.com/photo-1633237308525-cd587cf71926?w=500",
     category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa90", "656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa95"]
+    tags: ["656c0eb807d3e9dbe63afa90", "656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa99", "656c0eb807d3e9dbe63afa95"]
   },
   {
     name: "Gado-gado",
@@ -120,11 +125,11 @@ const products = [
   },
   {
     name: "Sate Ayam",
-    description: "Sate ayam dengan bumbu kacang dan lontong",
+    description: "Sate ayam dengan bumbu kacang special",
     price: 35000,
     image_url: "https://images.unsplash.com/photo-1529563021893-cc83c992d75d?w=500",
     category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa95"]
+    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa99", "656c0eb807d3e9dbe63afa95"]
   },
   {
     name: "Rendang Daging",
@@ -132,23 +137,23 @@ const products = [
     price: 50000,
     image_url: "https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=500",
     category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa90", "656c0eb807d3e9dbe63afa91"]
+    tags: ["656c0eb807d3e9dbe63afa90", "656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa95"]
   },
   {
     name: "Soto Ayam",
-    description: "Sup ayam tradisional dengan bumbu kuning dan pelengkap",
-    price: 30000,
-    image_url: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=500",
+    description: "Soto ayam dengan kuah bening dan ayam suwir",
+    price: 25000,
+    image_url: "https://images.unsplash.com/photo-1547592180-85f173990554?w=500",
     category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa95"]
+    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa98", "656c0eb807d3e9dbe63afa95"]
   },
   {
     name: "Bakso Spesial",
-    description: "Bakso daging sapi dengan mie dan kuah kaldu",
-    price: 35000,
-    image_url: "https://images.unsplash.com/photo-1590301157890-4810ed352733?w=500",
+    description: "Bakso daging sapi dengan mie dan pangsit",
+    price: 30000,
+    image_url: "https://images.unsplash.com/photo-1591123120675-6f7f1aae0e5b?w=500",
     category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa95"]
+    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa98", "656c0eb807d3e9dbe63afa95"]
   },
   {
     name: "Capcay Seafood",
@@ -156,7 +161,7 @@ const products = [
     price: 40000,
     image_url: "https://images.unsplash.com/photo-1512058533999-a3d718f1768f?w=500",
     category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa94"]
+    tags: ["656c0eb807d3e9dbe63afa94", "656c0eb807d3e9dbe63afa9a", "656c0eb807d3e9dbe63afa95"]
   },
   {
     name: "Ayam Geprek",
@@ -186,25 +191,25 @@ const products = [
   // Kategori Minuman
   {
     name: "Es Teh Manis",
-    description: "Teh manis segar dengan es batu",
-    price: 5000,
-    image_url: "https://images.unsplash.com/photo-1499638673689-79a0b5115d87?w=500",
+    description: "Teh manis dingin yang menyegarkan",
+    price: 8000,
+    image_url: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=500",
     category: "656c0eb807d3e9dbe63afa92",
-    tags: ["656c0eb807d3e9dbe63afa93"]
+    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa93"]
   },
   {
     name: "Thai Tea",
-    description: "Thai tea autentik dengan susu",
+    description: "Thai tea dengan susu segar",
     price: 15000,
-    image_url: "/images/products/thai-tea.png",
+    image_url: "https://images.unsplash.com/photo-1558857563-b371033873b8?w=500",
     category: "656c0eb807d3e9dbe63afa92",
     tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa93"]
   },
   {
     name: "Es Jeruk",
-    description: "Jeruk segar diperas langsung",
-    price: 8000,
-    image_url: "/images/products/es-jeruk.png",
+    description: "Jeruk segar yang menyegarkan",
+    price: 10000,
+    image_url: "https://images.unsplash.com/photo-1587015566802-5dc157c901cf?w=500",
     category: "656c0eb807d3e9dbe63afa92",
     tags: ["656c0eb807d3e9dbe63afa93"]
   },
@@ -212,7 +217,7 @@ const products = [
     name: "Es Kopi Susu",
     description: "Kopi susu dengan gula aren",
     price: 18000,
-    image_url: "/images/products/es-kopi.png",
+    image_url: "https://images.unsplash.com/photo-1589396575653-c09c794ff6a6?w=500",
     category: "656c0eb807d3e9dbe63afa92",
     tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa93"]
   },
@@ -252,17 +257,17 @@ const products = [
   // Kategori Dessert
   {
     name: "Classic Chocolate Pudding",
-    description: "Smooth and creamy chocolate pudding topped with whipped cream",
-    price: 25000,
-    image_url: "/images/products/pudding-chocolate.png",
+    description: "Pudding coklat lembut dengan saus vanilla",
+    price: 20000,
+    image_url: "https://images.unsplash.com/photo-1539252554453-80ab65ce3586?w=500",
     category: "656c0eb807d3e9dbe63afa96",
-    tags: ["656c0eb807d3e9dbe63afa91"]
+    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa93"]
   },
   {
     name: "Vanilla Ice Cream",
-    description: "Creamy vanilla ice cream with natural Madagascar vanilla",
-    price: 20000,
-    image_url: "/images/products/ice-cream-vanilla.png",
+    description: "Es krim vanilla lembut dengan topping",
+    price: 15000,
+    image_url: "https://images.unsplash.com/photo-1570197571499-166b36435e9f?w=500",
     category: "656c0eb807d3e9dbe63afa96",
     tags: ["656c0eb807d3e9dbe63afa93"]
   },
