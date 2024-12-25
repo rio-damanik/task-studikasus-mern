@@ -10,7 +10,11 @@ const formatRupiah = (number) => {
 
 const Product = () => {
   const [productList, setProductList] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState([
+    { _id: 'makanan', name: 'Makanan' },
+    { _id: 'minuman', name: 'Minuman' },
+    { _id: 'dessert', name: 'Dessert' }
+  ]);
   const [tags, setTags] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedTag, setSelectedTag] = useState('all');
@@ -22,7 +26,42 @@ const Product = () => {
         // Fetch products
         const productsRes = await fetch('http://localhost:8000/api/products?limit=100');
         const productsData = await productsRes.json();
-        setProductList(productsData.data || []);
+        
+        // Kategorikan produk berdasarkan namanya
+        const products = productsData.data.map(product => {
+          // Jika produk belum memiliki kategori, tentukan berdasarkan nama
+          if (!product.category) {
+            const nameLower = product.name.toLowerCase();
+            if (nameLower.includes('nasi') || 
+                nameLower.includes('mie') || 
+                nameLower.includes('ayam') || 
+                nameLower.includes('bakso') ||
+                nameLower.includes('sop') ||
+                nameLower.includes('ikan') ||
+                nameLower.includes('buntut') ||
+                nameLower.includes('bakar') ||
+                nameLower.includes('capcay') ||
+                nameLower.includes('rendang') ||
+                nameLower.includes('gado')) {
+              product.category = { _id: '656c0eb807d3e9dbe63afa89', name: 'Makanan' };
+            } else if (nameLower.includes('es') || 
+                      nameLower.includes('teh') || 
+                      nameLower.includes('jus') || 
+                      nameLower.includes('kopi') ||
+                      nameLower.includes('thai') ||
+                      nameLower.includes('tea')) {
+              product.category = { _id: '656c0eb807d3e9dbe63afa92', name: 'Minuman' };
+            } else if (nameLower.includes('smoothie') ||
+                      nameLower.includes('pudding') ||
+                      nameLower.includes('ice cream') ||
+                      nameLower.includes('dessert')) {
+              product.category = { _id: '656c0eb807d3e9dbe63afa96', name: 'Dessert' };
+            }
+          }
+          return product;
+        });
+        
+        setProductList(products);
 
         // Fetch categories
         const categoriesRes = await fetch('http://localhost:8000/api/categories');
