@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import App from './App';
-import Products from './components/Product/Products';
+import Product from './components/Product/Product';
 import Auth from './components/Auth/Auth';
 import ProductManagement from './components/Admin/ProductManagement';
 import Order from './components/Order/Order';
@@ -17,7 +17,7 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Products />,
+        element: <Product />,
       },
       {
         path: 'auth',
