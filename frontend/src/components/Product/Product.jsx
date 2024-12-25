@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { FaFire, FaSnowflake, FaLeaf, FaHamburger, FaWater, FaTag, FaShoppingCart } from 'react-icons/fa';
 import { GiChickenOven, GiCook } from 'react-icons/gi';
 import { MdLocalDining, MdCategory } from 'react-icons/md';
 import "./Product.css";
 import { useCart } from '../../context/CartContext';
 
+// Helper function di luar komponen tidak perlu useCallback
 const formatRupiah = (number) => {
-  return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(number);
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(number);
 };
 
 const Product = () => {
@@ -20,8 +21,8 @@ const Product = () => {
   const [selectedTag, setSelectedTag] = useState('all');
   const { addToCart: addToCartContext } = useCart();
 
-  // Data tag statis
-  const tags = [
+  // Data tag statis dengan useMemo
+  const tags = useMemo(() => [
     { _id: 'tag1', name: 'Pedas' },
     { _id: 'tag2', name: 'Dingin' },
     { _id: 'tag3', name: 'Vegetarian' },
@@ -30,9 +31,9 @@ const Product = () => {
     { _id: 'tag6', name: 'Berkuah' },
     { _id: 'tag7', name: 'Bakar' },
     { _id: 'tag8', name: 'Populer' }
-  ];
+  ], []); // Empty dependency array karena data statis
 
-  const getTagIcon = (tag) => {
+  const getTagIcon = useCallback((tag) => {
     switch (tag.toLowerCase()) {
       case 'pedas':
         return <FaFire />;
@@ -53,9 +54,9 @@ const Product = () => {
       default:
         return <FaTag />;
     }
-  };
+  }, []); // Empty dependency array karena fungsi statis
 
-  const getTagColor = (tagName) => {
+  const getTagColor = useCallback((tagName) => {
     const tagColors = {
       'pedas': '#ff4d4d',
       'populer': '#ffd700',
@@ -67,85 +68,91 @@ const Product = () => {
       'bakar': '#ff6b6b'
     };
     return tagColors[tagName.toLowerCase()] || '#808080';
-  };
+  }, []); // Empty dependency array karena fungsi statis
+
+  const fetchProducts = useCallback(async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/products?limit=100');
+      const data = await response.json();
+      // Menambahkan tag statis ke setiap produk
+      const productsWithTags = data.data.map(product => {
+        // Jika produk belum memiliki kategori, tentukan berdasarkan nama
+        if (!product.category) {
+          const nameLower = product.name.toLowerCase();
+          if (nameLower.includes('nasi') || 
+              nameLower.includes('mie') || 
+              nameLower.includes('ayam') || 
+              nameLower.includes('bakso') ||
+              nameLower.includes('sop') ||
+              nameLower.includes('ikan') ||
+              nameLower.includes('buntut') ||
+              nameLower.includes('bakar') ||
+              nameLower.includes('capcay') ||
+              nameLower.includes('rendang') ||
+              nameLower.includes('gado')) {
+            product.category = { _id: '656c0eb807d3e9dbe63afa89', name: 'Makanan' };
+          } else if (nameLower.includes('es') || 
+                    nameLower.includes('teh') || 
+                    nameLower.includes('jus') || 
+                    nameLower.includes('kopi') ||
+                    nameLower.includes('thai') ||
+                    nameLower.includes('tea')) {
+            product.category = { _id: '656c0eb807d3e9dbe63afa92', name: 'Minuman' };
+          } else if (nameLower.includes('smoothie') ||
+                    nameLower.includes('pudding') ||
+                    nameLower.includes('ice cream') ||
+                    nameLower.includes('dessert')) {
+            product.category = { _id: '656c0eb807d3e9dbe63afa96', name: 'Dessert' };
+          }
+        }
+        // Menambahkan tag statis ke setiap produk
+        product.tags = [
+          tags[Math.floor(Math.random() * 3)], // Tambahkan 1-3 tag random
+          tags[Math.floor(Math.random() * 3) + 3],
+          tags[Math.floor(Math.random() * 2) + 6]
+        ].filter(Boolean); // Remove any undefined tags
+        return product;
+      });
+      setProductList(productsWithTags);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  }, [tags]); // Hanya tags sebagai dependency karena sudah di-memoize
+
+  const fetchCategories = useCallback(async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/categories');
+      const data = await response.json();
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  }, []); // No dependencies needed
+
+  const handleAddToCart = useCallback((product) => {
+    addToCartContext(product);
+  }, [addToCartContext]);
+
+  const handleTagClick = useCallback((tagId) => {
+    setSelectedTag(tagId === selectedTag ? 'all' : tagId);
+  }, [selectedTag]);
+
+  const filteredProducts = useMemo(() => {
+    return productList.filter(product => {
+      const categoryMatch = selectedCategory === 'all' || product.category?._id === selectedCategory;
+      const tagMatch = selectedTag === 'all' || 
+        product.tags?.some(tag => tag._id === selectedTag);
+      return categoryMatch && tagMatch;
+    });
+  }, [productList, selectedCategory, selectedTag]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch products
-        const productsRes = await fetch('http://localhost:8000/api/products?limit=100');
-        const productsData = await productsRes.json();
-        
-        // Kategorikan produk berdasarkan namanya
-        const products = productsData.data.map(product => {
-          // Jika produk belum memiliki kategori, tentukan berdasarkan nama
-          if (!product.category) {
-            const nameLower = product.name.toLowerCase();
-            if (nameLower.includes('nasi') || 
-                nameLower.includes('mie') || 
-                nameLower.includes('ayam') || 
-                nameLower.includes('bakso') ||
-                nameLower.includes('sop') ||
-                nameLower.includes('ikan') ||
-                nameLower.includes('buntut') ||
-                nameLower.includes('bakar') ||
-                nameLower.includes('capcay') ||
-                nameLower.includes('rendang') ||
-                nameLower.includes('gado')) {
-              product.category = { _id: '656c0eb807d3e9dbe63afa89', name: 'Makanan' };
-            } else if (nameLower.includes('es') || 
-                      nameLower.includes('teh') || 
-                      nameLower.includes('jus') || 
-                      nameLower.includes('kopi') ||
-                      nameLower.includes('thai') ||
-                      nameLower.includes('tea')) {
-              product.category = { _id: '656c0eb807d3e9dbe63afa92', name: 'Minuman' };
-            } else if (nameLower.includes('smoothie') ||
-                      nameLower.includes('pudding') ||
-                      nameLower.includes('ice cream') ||
-                      nameLower.includes('dessert')) {
-              product.category = { _id: '656c0eb807d3e9dbe63afa96', name: 'Dessert' };
-            }
-          }
-          // Menambahkan tag statis ke setiap produk
-          product.tags = [
-            tags[Math.floor(Math.random() * 3)], // Tambahkan 1-3 tag random
-            tags[Math.floor(Math.random() * 3) + 3],
-            tags[Math.floor(Math.random() * 2) + 6]
-          ];
-          return product;
-        });
-        
-        setProductList(products);
-
-        // Fetch categories
-        const categoriesRes = await fetch('http://localhost:8000/api/categories');
-        const categoriesData = await categoriesRes.json();
-        setCategories(categoriesData || []);
-
-      } catch (err) {
-        console.error('Error fetching data:', err);
-      }
+    const loadData = async () => {
+      await fetchProducts();
+      await fetchCategories();
     };
-
-    fetchData();
-  }, []);
-
-  const handleAddToCart = (product) => {
-    addToCartContext(product);
-    alert(`${product.name} added to cart!`);
-  };
-
-  const handleTagClick = (tagId) => {
-    setSelectedTag(tagId === selectedTag ? 'all' : tagId);
-  };
-
-  const filteredProducts = productList.filter(product => {
-    const categoryMatch = selectedCategory === 'all' || product.category?._id === selectedCategory;
-    const tagMatch = selectedTag === 'all' || 
-      product.tags?.some(tag => tag._id === selectedTag);
-    return categoryMatch && tagMatch;
-  });
+    loadData();
+  }, [fetchProducts, fetchCategories]);
 
   return (
     <div className="pos-container">
