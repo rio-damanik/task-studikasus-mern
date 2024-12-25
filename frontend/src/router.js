@@ -2,7 +2,6 @@ import { createBrowserRouter } from 'react-router-dom';
 import App from './App';
 import Auth from './components/Auth/Auth';
 import Cart from './components/Cart/Cart';
-import Category from './components/Category/Category';
 import DeliveryAddress from './components/DeliveryAddress/DeliveryAddress';
 import Invoice from './components/Invoice/Invoice';
 import Product from './components/Product/Product';
@@ -42,10 +41,6 @@ export const router = createBrowserRouter(
         {
           path: '/cart',
           element: <Cart />,
-        },
-        {
-          path: '/category',
-          element: <Category />,
         },
         {
           path: '/delivery-address',
