@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { FaShoppingCart, FaTag } from "react-icons/fa";
-import { MdCategory } from "react-icons/md";
+import { FaFire, FaSnowflake, FaLeaf, FaHamburger, FaWater, FaTag, FaShoppingCart } from 'react-icons/fa';
+import { GiChickenOven, GiCook } from 'react-icons/gi';
+import { MdLocalDining, MdCategory } from 'react-icons/md';
 import "./Product.css";
 import { useCart } from '../../context/CartContext';
 
@@ -19,6 +20,44 @@ const Product = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedTag, setSelectedTag] = useState('all');
   const { addToCart: addToCartContext } = useCart();
+
+  const getTagIcon = (tag) => {
+    switch (tag.toLowerCase()) {
+      case 'pedas':
+        return <FaFire />;
+      case 'dingin':
+        return <FaSnowflake />;
+      case 'vegetarian':
+        return <FaLeaf />;
+      case 'halal':
+        return <GiCook />;
+      case 'goreng':
+        return <FaHamburger />;
+      case 'berkuah':
+        return <FaWater />;
+      case 'bakar':
+        return <GiChickenOven />;
+      case 'populer':
+        return <MdLocalDining />;
+      default:
+        return null;
+    }
+  };
+
+  const getTagColor = (tagName) => {
+    const tagColors = {
+      'Pedas': '#ff4d4d',
+      'Populer': '#ffd700',
+      'Dingin': '#00bfff',
+      'Vegetarian': '#32cd32',
+      'Halal': '#4caf50',
+      'Goreng': '#ff8c00',
+      'Berkuah': '#4169e1',
+      'Bakar': '#ff6b6b',
+      'Seafood': '#00ced1'
+    };
+    return tagColors[tagName] || '#808080';
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -86,6 +125,10 @@ const Product = () => {
     alert(`${product.name} added to cart!`);
   };
 
+  const handleTagClick = (tagId) => {
+    setSelectedTag(tagId === selectedTag ? 'all' : tagId);
+  };
+
   const filteredProducts = productList.filter(product => {
     const categoryMatch = selectedCategory === 'all' || product.category?._id === selectedCategory;
     const tagMatch = selectedTag === 'all' || 
@@ -133,8 +176,13 @@ const Product = () => {
                 key={tag._id}
                 className={`filter-button ${selectedTag === tag._id ? 'active' : ''}`}
                 onClick={() => setSelectedTag(tag._id)}
+                style={{
+                  backgroundColor: selectedTag === tag._id ? getTagColor(tag.name) : 'transparent',
+                  color: selectedTag === tag._id ? 'white' : getTagColor(tag.name),
+                  borderColor: getTagColor(tag.name)
+                }}
               >
-                {tag.name}
+                {getTagIcon(tag.name)} {tag.name}
               </button>
             ))}
           </div>
@@ -150,26 +198,41 @@ const Product = () => {
               className="pos-image"
             />
             <div className="pos-info">
-              <div className="pos-category">
-                <MdCategory /> {product.category?.name || 'Uncategorized'}
+              <div className="pos-header">
+                <div className="pos-category">
+                  <MdCategory /> {product.category?.name || 'Uncategorized'}
+                </div>
+                <h3>{product.name}</h3>
+                <p className="pos-description">{product.description}</p>
               </div>
-              <h3>{product.name}</h3>
-              <p className="pos-description">{product.description}</p>
-              <div className="pos-tags">
-                {product.tags?.map(tag => (
-                  <span key={tag._id} className="pos-tag">
-                    <FaTag /> {tag.name}
-                  </span>
-                ))}
-              </div>
-              <div className="pos-footer">
-                <span className="pos-price">{formatRupiah(product.price)}</span>
-                <button 
-                  className="pos-add-button"
-                  onClick={() => handleAddToCart(product)}
-                >
-                  <FaShoppingCart /> Add
-                </button>
+              <div className="pos-content">
+                {Array.isArray(product.tags) && product.tags.length > 0 && (
+                  <div className="pos-tags">
+                    {product.tags.map(tag => (
+                      <button
+                        key={tag._id}
+                        className={`pos-tag-button ${selectedTag === tag._id ? 'active' : ''}`}
+                        onClick={() => handleTagClick(tag._id)}
+                        style={{
+                          backgroundColor: selectedTag === tag._id ? getTagColor(tag.name) : 'transparent',
+                          color: selectedTag === tag._id ? 'white' : getTagColor(tag.name),
+                          borderColor: getTagColor(tag.name)
+                        }}
+                      >
+                        {getTagIcon(tag.name)} {tag.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div className="pos-footer">
+                  <span className="pos-price">{formatRupiah(product.price)}</span>
+                  <button 
+                    className="pos-add-button"
+                    onClick={() => handleAddToCart(product)}
+                  >
+                    <FaShoppingCart /> Add
+                  </button>
+                </div>
               </div>
             </div>
           </div>
