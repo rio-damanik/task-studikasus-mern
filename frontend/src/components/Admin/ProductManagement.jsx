@@ -412,36 +412,11 @@ const ProductManagement = () => {
                   </div>
                   {imagePreview && (
                     <div className="image-preview">
-                      {isValidUrl(imagePreview) ?
-                        <img
-                          src={imagePreview || '/placeholder.png'}
-<<<<<<< HEAD
-=======
-                          alt="Product preview"
->>>>>>> ff706405593fa5d814bb07c983a7044f8e00515e
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = '/placeholder.png';
-                          }}
-                        /> : <img
-                          src={'http://localhost:8000/uploads/' + imagePreview}
-<<<<<<< HEAD
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = '/placeholder.png';
-                        }}
-                        />
-                      }
-                      {/* <img src={imagePreview} alt="Preview" /> */}
-=======
-                          alt="Product preview"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = '/placeholder.png';
-                          }}
-                        />
-                      }
->>>>>>> ff706405593fa5d814bb07c983a7044f8e00515e
+                      <img
+                        src={imagePreview || '/placeholder.png'}
+                        alt="Product preview"
+                        className="preview-image"
+                      />
                     </div>
                   )}
                 </div>
