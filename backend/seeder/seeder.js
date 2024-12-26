@@ -39,15 +39,20 @@ const categories = [
   }
 ];
 
+// Admin user data
+const adminUser = {
+  _id: "admin_" + new Date().getTime(),
+  full_name: "Super Admin",
+  email: "superadmin@pos.com",
+  password: bcrypt.hashSync("admin123", 10),
+  role: "admin",
+  token: [],
+  createdAt: new Date(),
+  updatedAt: new Date()
+};
+
 // Users data
 const users = [
-  {
-    full_name: "Admin User",
-    email: "admin@example.com",
-    password: bcrypt.hashSync("admin123", 10),
-    role: "admin",
-    token: []
-  },
   {
     full_name: "John Doe",
     email: "john@example.com",
@@ -310,6 +315,10 @@ async function seedDatabase() {
     // Insert categories
     const categoriesResult = await database.collection('categories').insertMany(categories);
     console.log(`${categoriesResult.insertedCount} categories inserted`);
+
+    // Insert admin user
+    await database.collection('users').insertOne(adminUser);
+    console.log('Admin user seeded');
 
     // Insert users
     const usersResult = await database.collection('users').insertMany(users);
