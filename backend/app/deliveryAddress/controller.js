@@ -6,14 +6,11 @@ const show = async (req, res, next) => {
     try {
         const user = req.user;
         const deliveryAddress = await DeliveryAddress.find({ user: user._id });
-        if (deliveryAddress.length === 0) {
-            return res.json({
-                error: 1,
-                statusCode: 404,
-                message: 'Delivery address not found'
-            });
-        }
-        return res.json(deliveryAddress);
+        return res.json({
+            error: 0,
+            message: deliveryAddress.length ? 'Success' : 'No delivery addresses found',
+            data: deliveryAddress
+        });
     } catch (err) {
         next(err);
     }

@@ -19,7 +19,7 @@ const ProductManagement = () => {
     description: '',
     price: '',
     category: '',
-    stock: '',
+    stock: 0,
     image: null
   });
 
@@ -28,6 +28,15 @@ const ProductManagement = () => {
     fetchCategories();
     fetchTags();
   }, []);
+
+  const isValidUrl = urlString => {
+    try {
+      return Boolean(new URL(urlString));
+    }
+    catch (e) {
+      return false;
+    }
+  }
 
   const fetchProducts = async () => {
     try {
@@ -63,15 +72,15 @@ const ProductManagement = () => {
     }
   };
 
-  const filteredProducts = products.filter(product => 
+  const filteredProducts = products.filter(product =>
     selectedCategory === 'all' || product.category?._id === selectedCategory
   );
 
   const handleInputChange = (e) => {
-    const value = e.target.type === 'number' ? 
-      e.target.value === '' ? '' : Number(e.target.value) : 
+    const value = e.target.type === 'number' ?
+      e.target.value === '' ? '' : Number(e.target.value) :
       e.target.value;
-    
+
     setFormData({
       ...formData,
       [e.target.name]: value
@@ -86,7 +95,7 @@ const ProductManagement = () => {
           ...prev,
           image: file
         }));
-        
+
         const reader = new FileReader();
         reader.onloadend = () => {
           setImagePreview(reader.result);
@@ -116,14 +125,13 @@ const ProductManagement = () => {
       const formDataToSend = new FormData();
       formDataToSend.append('name', formData.name);
       formDataToSend.append('description', formData.description);
-      formDataToSend.append('price', formData.price);
+      formDataToSend.append('price', parseInt(formData.price));
       formDataToSend.append('category', formData.category);
-      formDataToSend.append('stock', formData.stock);
-      
+      formDataToSend.append('stock', parseInt(formData.stock));
       selectedTags.forEach(tagId => {
         formDataToSend.append('tags[]', tagId);
       });
-      
+
       if (formData.image) {
         formDataToSend.append('image', formData.image);
       }
@@ -135,16 +143,16 @@ const ProductManagement = () => {
           'Content-Type': 'multipart/form-data'
         }
       };
-
+     
       if (editingProduct) {
         await axios.put(
-          `http://localhost:8000/api/products/${editingProduct._id}`, 
+          `http://localhost:8000/api/products/${editingProduct._id}`,
           formDataToSend,
           config
         );
       } else {
         await axios.post(
-          'http://localhost:8000/api/products', 
+          'http://localhost:8000/api/products',
           formDataToSend,
           config
         );
@@ -168,7 +176,7 @@ const ProductManagement = () => {
       description: product.description,
       price: product.price,
       category: product.category?._id || '',
-      stock: product.stock
+      stock: product.stock?product.stock:0
     });
     setSelectedTags(product.tags?.map(tag => tag._id) || []);
     setImagePreview(product.image_url);
@@ -182,7 +190,14 @@ const ProductManagement = () => {
 
     try {
       setLoading(true);
-      await axios.delete(`http://localhost:8000/api/products/${productId}`);
+      const token = localStorage.getItem('token');
+      const config = {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      };
+      await axios.delete(`http://localhost:8000/api/products/${productId}`, config);
       await fetchProducts(); // Refresh the product list
       setError('');
     } catch (err) {
@@ -200,7 +215,7 @@ const ProductManagement = () => {
       description: '',
       price: '',
       category: '',
-      stock: '',
+      stock: 0,
       image: null
     });
     setSelectedTags([]);
@@ -219,8 +234,8 @@ const ProductManagement = () => {
     <div className="product-management">
       <div className="management-header">
         <h2>Product Management</h2>
-        <button 
-          className="add-product-btn" 
+        <button
+          className="add-product-btn"
           onClick={() => setShowForm(true)}
         >
           <i className="fas fa-plus"></i> Add New Product
@@ -254,29 +269,40 @@ const ProductManagement = () => {
           filteredProducts.map(product => (
             <div key={product._id} className="product-card">
               <div className="product-image-container">
-                <img 
-                  src={product.image_url || '/placeholder.jpg'} 
-                  alt={product.name} 
-                  className="product-image"
+                {isValidUrl(product.image_url) ?
+                  <img
+                    src={product.image_url || '/placeholder.png'}
+                    alt={product.name}
+                    className="product-image"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = '/placeholder.png';
+                    }}
+                  /> : <img
+                    src={'http://localhost:8000/uploads/' + product.image_url}
+                    alt={product.name}
+                    className="product-image"
                   onError={(e) => {
                     e.target.onerror = null;
-                    e.target.src = '/placeholder.jpg';
+                    e.target.src = '/placeholder.png';
                   }}
-                />
+                  />
+                }
+
               </div>
               <div className="product-details">
                 <h3>{product.name}</h3>
                 <p className="description">{product.description}</p>
                 <p className="price">IDR {formatPrice(product.price)}</p>
-                <p className="stock">Stock: {product.stock}</p>
+                <p className="stock">Stock: {product.stock?product.stock:0}</p>
                 <div className="product-actions">
-                  <button 
+                  <button
                     className="edit-btn"
                     onClick={() => handleEdit(product)}
                   >
                     <i className="fas fa-edit"></i> Edit
                   </button>
-                  <button 
+                  <button
                     className="delete-btn"
                     onClick={() => handleDelete(product._id)}
                   >
@@ -359,7 +385,7 @@ const ProductManagement = () => {
                     <input
                       type="number"
                       name="stock"
-                      value={formData.stock}
+                      value={formData.stock?formData.stock:0}
                       onChange={handleInputChange}
                       required
                       min="0"
@@ -386,7 +412,22 @@ const ProductManagement = () => {
                   </div>
                   {imagePreview && (
                     <div className="image-preview">
-                      <img src={imagePreview} alt="Preview" />
+                      {isValidUrl(imagePreview) ?
+                        <img
+                          src={imagePreview || '/placeholder.png'}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = '/placeholder.png';
+                          }}
+                        /> : <img
+                          src={'http://localhost:8000/uploads/' + imagePreview}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = '/placeholder.png';
+                        }}
+                        />
+                      }
+                      {/* <img src={imagePreview} alt="Preview" /> */}
                     </div>
                   )}
                 </div>

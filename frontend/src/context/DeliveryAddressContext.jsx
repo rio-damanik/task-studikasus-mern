@@ -17,7 +17,7 @@ export const DeliveryAddressProvider = ({ children }) => {
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { token } = useAuth();
+  const token = localStorage.getItem('token');
 
   const fetchAddresses = useCallback(async () => {
     if (!token) return;

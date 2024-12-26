@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import axios from 'axios';
+import { config } from '../config/config';
 
 const CartContext = createContext();
 
@@ -6,37 +8,110 @@ export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
   const [customerName, setCustomerName] = useState('');
 
-  const addToCart = (product) => {
-    setCart(prevCart => {
-      const existingItem = prevCart.find(item => item.product._id === product._id);
-      if (existingItem) {
-        return prevCart.map(item =>
-          item.product._id === product._id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
+  const fetchCart = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(config.endpoints.carts, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.data && response.data.items) {
+        const cartItems = response.data.items.map(item => ({
+          product: item.product,
+          quantity: item.qty
+        }));
+        setCart(cartItems);
       }
-      return [...prevCart, { product, quantity: 1 }];
-    });
+    } catch (error) {
+      console.error('Error fetching cart:', error);
+    }
   };
 
-  const updateQuantity = (productId, quantity) => {
-    setCart(prevCart =>
-      prevCart.map(item =>
-        item.product._id === productId
-          ? { ...item, quantity }
-          : item
-      )
-    );
+  useEffect(() => {
+    fetchCart();
+  }, []);
+
+  const addToCart = async (product) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(config.endpoints.cartAdd, 
+        { productId: product._id },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      await fetchCart();
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+    }
   };
 
-  const removeFromCart = (productId) => {
-    setCart(prevCart => prevCart.filter(item => item.product._id !== productId));
+  const updateQuantity = async (productId, quantity) => {
+    try {
+      const token = localStorage.getItem('token');
+      const currentItem = cart.find(item => item.product._id === productId);
+      if (!currentItem) return;
+
+      const difference = quantity - currentItem.quantity;
+      
+      if (difference > 0) {
+        for (let i = 0; i < difference; i++) {
+          await axios.put(config.endpoints.cartAdd, 
+            { productId },
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            }
+          );
+        }
+      } else if (difference < 0) {
+        for (let i = 0; i > difference; i--) {
+          await axios.put(config.endpoints.cartReduce, 
+            { productId },
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            }
+          );
+        }
+      }
+      
+      await fetchCart();
+    } catch (error) {
+      console.error('Error updating cart quantity:', error);
+    }
   };
 
-  const clearCart = () => {
-    setCart([]);
-    setCustomerName('');
+  const removeFromCart = async (productId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(config.endpoints.cartRemove, 
+        { productId },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      await fetchCart();
+    } catch (error) {
+      console.error('Error removing from cart:', error);
+    }
+  };
+
+  const clearCart = async () => {
+    try {
+      setCart([]);
+      setCustomerName('');
+    } catch (error) {
+      console.error('Error clearing cart:', error);
+    }
   };
 
   const getTotalPrice = () => {
@@ -52,7 +127,8 @@ export const CartProvider = ({ children }) => {
       updateQuantity,
       removeFromCart,
       clearCart,
-      getTotalPrice
+      getTotalPrice,
+      fetchCart
     }}>
       {children}
     </CartContext.Provider>

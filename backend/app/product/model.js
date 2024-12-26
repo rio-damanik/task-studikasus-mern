@@ -12,6 +12,12 @@ const productSchema = new Schema({
     type: String,
     maxlength: [1000, 'Description cannot exceed 1000 characters']
   },
+  stock:{
+    type: Number,
+    required: [true, 'Product stock is required'],
+    min: [0, 'Stock cannot be negative'],
+    default: 0
+  },
   price: {
     type: Number,
     required: [true, 'Product price is required'],
@@ -22,13 +28,28 @@ const productSchema = new Schema({
     type: String
   },
   category: {
-    type: Schema.Types.ObjectId,
+    type: String,
     ref: 'Category'
   },
   tags: [{
-    type: Schema.Types.ObjectId,
+    type: String,
     ref: 'Tag'
   }]
-}, { timestamps: true });
+}, { 
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Add pre-find middleware to populate references
+productSchema.pre('find', function(next) {
+  this.populate('category').populate('tags');
+  next();
+});
+
+productSchema.pre('findOne', function(next) {
+  this.populate('tags');
+  next();
+});
 
 module.exports = model('Product', productSchema, 'products');

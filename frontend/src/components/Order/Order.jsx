@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useCart } from '../../context/CartContext';
+import { useDeliveryAddress } from '../../context/DeliveryAddressContext';
 import { FaUtensils, FaMotorcycle, FaMoneyBillWave, FaCreditCard, FaUpload, FaMapMarkerAlt, FaUser, FaTimes } from 'react-icons/fa';
 import { config } from '../../config/config';
 import { formatRupiah } from '../../utils/formatRupiah';
@@ -10,18 +11,11 @@ import './Order.css';
 const Order = () => {
   const navigate = useNavigate();
   const { cart, clearCart, customerName } = useCart();
+  const { addresses, fetchAddresses } = useDeliveryAddress();
   const [orderType, setOrderType] = useState('dine-in');
-  const [paymentMethod, setPaymentMethod] = useState('cash');
-  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('tunai');
+  const [showAddressModal, setShowAddressModal] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState(null);
-  const [addressForm, setAddressForm] = useState({
-    nama: '',
-    detail: '',
-    kelurahan: '',
-    kecamatan: '',
-    kabupaten: '',
-    provinsi: ''
-  });
   const [transferProof, setTransferProof] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -32,25 +26,8 @@ const Order = () => {
       navigate('/cart');
       return;
     }
-    if (!customerName.trim()) {
-      navigate('/cart');
-      return;
-    }
-  }, [cart, customerName, navigate]);
-
-  const handleAddressChange = (e) => {
-    const { name, value } = e.target;
-    setAddressForm(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleAddressSubmit = (e) => {
-    e.preventDefault();
-    setSelectedAddress(addressForm);
-    setShowAddressForm(false);
-  };
+    fetchAddresses();
+  }, [cart, navigate, fetchAddresses]);
 
   const handleTransferProofChange = (e) => {
     const file = e.target.files[0];
@@ -65,10 +42,6 @@ const Order = () => {
 
   const getSubtotal = () => {
     return cart.reduce((total, item) => total + (item.product.price * item.quantity), 0);
-  };
-
-  const getTotalQuantity = () => {
-    return cart.reduce((total, item) => total + item.quantity, 0);
   };
 
   const getDeliveryFee = () => {
@@ -90,6 +63,20 @@ const Order = () => {
   };
 
   const handlePlaceOrder = async () => {
+    if (orderType === 'delivery' && !selectedAddress) {
+      setError('Please select a delivery address');
+      return;
+    }
+
+    if (orderType === 'delivery' && selectedAddress) {
+      if (!selectedAddress.kelurahan || !selectedAddress.kecamatan || 
+          !selectedAddress.kabupaten || !selectedAddress.provinsi || 
+          !selectedAddress.detail) {
+        setError('Please complete all delivery address fields');
+        return;
+      }
+    }
+
     setShowConfirmation(true);
   };
 
@@ -98,50 +85,68 @@ const Order = () => {
       setLoading(true);
       setError('');
 
+      if (!cart || cart.length === 0) {
+        throw new Error('Cart is empty');
+      }
+
+      if (orderType === 'delivery' && !selectedAddress) {
+        throw new Error('Please select a delivery address');
+      }
+
+      console.log('Cart data:', cart);
+
+      const token = localStorage.getItem('token');
       const orderData = {
         delivery_fee: orderType === 'delivery' ? 10000 : 0,
         metode_payment: paymentMethod,
         delivery_address: orderType === 'delivery' ? selectedAddress._id : null,
-        customer_name: customerName
+        customer_name: customerName || 'Guest Customer',
+        cart_items: cart.map(item => {
+          console.log('Processing cart item:', item);
+          return {
+            product: item.product._id || item.product,
+            qty: parseInt(item.quantity) || 0
+          };
+        })
       };
 
-      console.log('Submitting order:', orderData); // Debug log
+      console.log('Order data:', orderData);
 
       let response;
       
       if (paymentMethod === 'transfer' && transferProof) {
         const formData = new FormData();
         formData.append('transferProof', transferProof);
-        formData.append('orderData', JSON.stringify(orderData));
-        
-        console.log('Submitting with transfer proof'); // Debug log
+        Object.keys(orderData).forEach(key => {
+          formData.append(key, typeof orderData[key] === 'object' ? JSON.stringify(orderData[key]) : orderData[key]);
+        });
         
         response = await axios.post(config.endpoints.orders, formData, {
           headers: {
-            'Content-Type': 'multipart/form-data'
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`
           }
         });
       } else {
-        console.log('Submitting regular order'); // Debug log
-        
         response = await axios.post(config.endpoints.orders, orderData, {
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
           }
         });
       }
 
-      console.log('Server response:', response.data); // Debug log
+      console.log('Response:', response.data);
 
       if (response.data && !response.data.error) {
         clearCart();
         setShowConfirmation(false);
-        navigate(`/invoice/${response.data._id}`);
+        navigate(`/invoice/${response.data.data._id}`);
       } else {
         throw new Error(response.data.message || 'Failed to create order');
       }
     } catch (err) {
-      console.error('Order submission error:', err.response || err);
+      console.error('Order submission error:', err);
       setError(err.response?.data?.message || err.message || 'Failed to place order. Please try again.');
       setShowConfirmation(false);
     } finally {
@@ -173,7 +178,7 @@ const Order = () => {
         <div className="customer-section">
           <h2><FaUser /> Customer Information</h2>
           <div className="customer-info">
-            <p className="customer-name">Customer Name: {customerName}</p>
+            <p className="customer-name">Customer Name: {customerName?customerName:''}</p>
           </div>
         </div>
 
@@ -200,135 +205,59 @@ const Order = () => {
             <h2><FaMapMarkerAlt /> Delivery Address</h2>
             {selectedAddress ? (
               <div className="selected-address">
-                <div className="address-card">
-                  <div className="address-header">
-                    <FaMapMarkerAlt className="address-icon" />
-                    <h3>Delivery Location</h3>
-                  </div>
-                  <div className="address-details">
-                    <p><strong>Detail:</strong> {selectedAddress.detail}</p>
-                    <div className="address-grid">
-                      <div className="address-item">
-                        <span className="label">Kelurahan</span>
-                        <span className="value">{selectedAddress.kelurahan}</span>
-                      </div>
-                      <div className="address-item">
-                        <span className="label">Kecamatan</span>
-                        <span className="value">{selectedAddress.kecamatan}</span>
-                      </div>
-                      <div className="address-item">
-                        <span className="label">Kabupaten</span>
-                        <span className="value">{selectedAddress.kabupaten}</span>
-                      </div>
-                      <div className="address-item">
-                        <span className="label">Provinsi</span>
-                        <span className="value">{selectedAddress.provinsi}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <button className="change-address-button" onClick={() => setShowAddressForm(true)}>
-                    <FaMapMarkerAlt /> Change Address
-                  </button>
-                </div>
+                <h3>{selectedAddress.name}</h3>
+                <p>{selectedAddress.detail}</p>
+                <p>{selectedAddress.kelurahan}, {selectedAddress.kecamatan}</p>
+                <p>{selectedAddress.kabupaten}, {selectedAddress.provinsi}</p>
+                <button 
+                  className="change-address-button"
+                  onClick={() => setShowAddressModal(true)}
+                >
+                  Change Address
+                </button>
               </div>
             ) : (
-              <button className="add-address-button" onClick={() => setShowAddressForm(true)}>
-                <FaMapMarkerAlt /> Add Delivery Address
-              </button>
-            )}
-
-            {showAddressForm && (
-              <div className="address-form-container">
-                <form onSubmit={handleAddressSubmit} className="address-form">
-                  <div className="form-header">
-                    <h3><FaMapMarkerAlt /> Enter Delivery Address</h3>
-                  </div>
-                  <div className="form-fields">
-                    <div className="form-group">
-                      <label>
-                        <span className="label-text">Address Detail</span>
-                        <input
-                          type="text"
-                          name="detail"
-                          value={addressForm.detail}
-                          onChange={handleAddressChange}
-                          placeholder="Enter complete address details"
-                          required
-                        />
-                      </label>
-                    </div>
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>
-                          <span className="label-text">Kelurahan</span>
-                          <input
-                            type="text"
-                            name="kelurahan"
-                            value={addressForm.kelurahan}
-                            onChange={handleAddressChange}
-                            placeholder="Enter kelurahan"
-                            required
-                          />
-                        </label>
-                      </div>
-                      <div className="form-group">
-                        <label>
-                          <span className="label-text">Kecamatan</span>
-                          <input
-                            type="text"
-                            name="kecamatan"
-                            value={addressForm.kecamatan}
-                            onChange={handleAddressChange}
-                            placeholder="Enter kecamatan"
-                            required
-                          />
-                        </label>
-                      </div>
-                    </div>
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>
-                          <span className="label-text">Kabupaten</span>
-                          <input
-                            type="text"
-                            name="kabupaten"
-                            value={addressForm.kabupaten}
-                            onChange={handleAddressChange}
-                            placeholder="Enter kabupaten"
-                            required
-                          />
-                        </label>
-                      </div>
-                      <div className="form-group">
-                        <label>
-                          <span className="label-text">Provinsi</span>
-                          <input
-                            type="text"
-                            name="provinsi"
-                            value={addressForm.provinsi}
-                            onChange={handleAddressChange}
-                            placeholder="Enter provinsi"
-                            required
-                          />
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="form-actions">
-                    <button type="submit" className="save-button">
-                      <FaMapMarkerAlt /> Save Address
-                    </button>
-                    <button 
-                      type="button" 
-                      className="cancel-button"
-                      onClick={() => setShowAddressForm(false)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
+              <div className="no-address-selected">
+                <p>No delivery address selected</p>
+                <button 
+                  className="select-address-button"
+                  onClick={() => setShowAddressModal(true)}
+                >
+                  Select Address
+                </button>
               </div>
             )}
+          </div>
+        )}
+
+        {showAddressModal && (
+          <div className="address-modal">
+            <div className="address-modal-content">
+              <h2>Select Delivery Address</h2>
+              <div className="address-list">
+                {addresses.map((address) => (
+                  <div 
+                    key={address._id}
+                    className={`address-item ${selectedAddress?._id === address._id ? 'selected' : ''}`}
+                    onClick={() => {
+                      setSelectedAddress(address);
+                      setShowAddressModal(false);
+                    }}
+                  >
+                    <h3>{address.name}</h3>
+                    <p>{address.detail}</p>
+                    <p>{address.kelurahan}, {address.kecamatan}</p>
+                    <p>{address.kabupaten}, {address.provinsi}</p>
+                  </div>
+                ))}
+              </div>
+              <button 
+                className="close-modal-button"
+                onClick={() => setShowAddressModal(false)}
+              >
+                Close
+              </button>
+            </div>
           </div>
         )}
 
@@ -336,8 +265,8 @@ const Order = () => {
           <h2>Payment Method</h2>
           <div className="payment-options">
             <button
-              className={`payment-button ${paymentMethod === 'cash' ? 'active' : ''}`}
-              onClick={() => setPaymentMethod('cash')}
+              className={`payment-button ${paymentMethod === 'tunai' ? 'active' : ''}`}
+              onClick={() => setPaymentMethod('tunai')}
             >
               <FaMoneyBillWave /> Cash
             </button>
@@ -385,7 +314,7 @@ const Order = () => {
 
           <div className="order-totals">
             <div className="subtotal">
-              <span>Subtotal ({getTotalQuantity()} items)</span>
+              <span>Subtotal ({cart.length} items)</span>
               <span>{formatPrice(getSubtotal())}</span>
             </div>
             {orderType === 'delivery' && (
@@ -420,7 +349,7 @@ const Order = () => {
             <div className="confirmation-content">
               <p>Please review your order details:</p>
               <div className="confirmation-details">
-                <p><strong>Customer Name:</strong> {customerName}</p>
+                <p><strong>Customer Name:</strong> {customerName?customerName:''}</p>
                 <p><strong>Order Type:</strong> {orderType}</p>
                 <p><strong>Payment Method:</strong> {paymentMethod}</p>
                 <p><strong>Total Amount:</strong> {formatPrice(calculateTotal())}</p>

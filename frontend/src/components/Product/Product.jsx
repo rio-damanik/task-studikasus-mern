@@ -1,4 +1,8 @@
+<<<<<<< HEAD
+import React, { useCallback, useEffect, useState } from "react";
+=======
 import React, { useEffect, useState, useCallback, useMemo } from "react";
+>>>>>>> d257d39deeb42d1c9e935abf3aa105493c70b0ef
 import { FaFire, FaSnowflake, FaLeaf, FaHamburger, FaWater, FaTag, FaShoppingCart } from 'react-icons/fa';
 import { GiChickenOven, GiCook } from 'react-icons/gi';
 import { MdLocalDining, MdCategory } from 'react-icons/md';
@@ -21,6 +25,60 @@ const Product = () => {
   const [selectedTag, setSelectedTag] = useState('all');
   const { addToCart: addToCartContext } = useCart();
 
+<<<<<<< HEAD
+  const getTagIcon = useCallback((tag) => {
+    switch (tag.toLowerCase()) {
+      case 'pedas':
+        return <FaFire />;
+      case 'dingin':
+        return <FaSnowflake />;
+      case 'vegetarian':
+        return <FaLeaf />;
+      case 'halal':
+        return <GiCook />;
+      case 'goreng':
+        return <FaHamburger />;
+      case 'berkuah':
+        return <FaWater />;
+      case 'bakar':
+        return <GiChickenOven />;
+      case 'populer':
+        return <MdLocalDining />;
+      default:
+        return <FaTag />;
+    }
+  }, []); // Empty dependency array karena fungsi statis
+
+  const getTagColor = useCallback((tagName) => {
+    const tagColors = {
+      'pedas': '#ff4d4d',
+      'populer': '#ffd700',
+      'dingin': '#00bfff',
+      'vegetarian': '#32cd32',
+      'halal': '#4caf50',
+      'goreng': '#ff8c00',
+      'berkuah': '#4169e1',
+      'bakar': '#ff6b6b'
+    };
+    return tagColors[tagName.toLowerCase()] || '#808080';
+  }, []);
+
+  const isValidUrl = urlString => {
+    try {
+      return Boolean(new URL(urlString));
+    }
+    catch (e) {
+      return false;
+    }
+  }
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch products
+        const productsRes = await fetch('http://localhost:8000/api/products?limit=100');
+        const productsData = await productsRes.json();
+        setProductList(productsData.data || []);
+=======
   // Data tag statis dengan useMemo
   const tags = useMemo(() => [
     { _id: 'tag1', name: 'Pedas' },
@@ -32,6 +90,7 @@ const Product = () => {
     { _id: 'tag7', name: 'Bakar' },
     { _id: 'tag8', name: 'Populer' }
   ], []); // Empty dependency array karena data statis
+>>>>>>> d257d39deeb42d1c9e935abf3aa105493c70b0ef
 
   const getTagIcon = useCallback((tag) => {
     switch (tag.toLowerCase()) {
@@ -131,6 +190,20 @@ const Product = () => {
 
   const handleAddToCart = useCallback((product) => {
     addToCartContext(product);
+<<<<<<< HEAD
+    // alert(`${product.name} added to cart!`);
+  };
+
+  const filteredProducts = productList.filter(product => {
+    const categoryMatch = selectedCategory === 'all' || 
+      (product.category && product.category._id === selectedCategory);
+    
+    const tagMatch = selectedTag === 'all' || 
+      (product.tags && product.tags.some(tag => tag._id === selectedTag));
+    
+    return categoryMatch && tagMatch;
+  });
+=======
   }, [addToCartContext]);
 
   const handleTagClick = useCallback((tagId) => {
@@ -153,6 +226,7 @@ const Product = () => {
     };
     loadData();
   }, [fetchProducts, fetchCategories]);
+>>>>>>> d257d39deeb42d1c9e935abf3aa105493c70b0ef
 
   return (
     <div className="pos-container">
@@ -190,17 +264,30 @@ const Product = () => {
               Semua Tag
             </button>
             {tags.map(tag => (
-              <button 
+              // <button 
+              //   key={tag._id}
+              //   className={`filter-button ${selectedTag === tag._id ? 'active' : ''}`}
+              //   onClick={() => setSelectedTag(tag._id)}
+              // ></button>
+                <button 
                 key={tag._id}
                 className={`filter-button tag ${selectedTag === tag._id ? 'active' : ''}`}
+<<<<<<< HEAD
+                onClick={() => setSelectedTag(tag._id)}
+=======
                 onClick={() => handleTagClick(tag._id)}
+>>>>>>> d257d39deeb42d1c9e935abf3aa105493c70b0ef
                 style={{
                   backgroundColor: selectedTag === tag._id ? getTagColor(tag.name) : 'transparent',
                   color: selectedTag === tag._id ? 'white' : getTagColor(tag.name),
                   borderColor: getTagColor(tag.name)
                 }}
               >
+<<<<<<< HEAD
+               {getTagIcon(tag.name)} {tag.name}
+=======
                 {getTagIcon(tag.name)} {tag.name}
+>>>>>>> d257d39deeb42d1c9e935abf3aa105493c70b0ef
               </button>
             ))}
           </div>
@@ -210,11 +297,25 @@ const Product = () => {
       <div className="pos-grid">
         {filteredProducts.map(product => (
           <div key={product._id} className="pos-card">
+            {isValidUrl(product.image_url) ?
             <img 
-              src={product.image_url} 
+              src={product.image_url || '/placeholder.jpg'} 
               alt={product.name} 
               className="pos-image"
-            />
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = '/placeholder.png';
+              }}
+            />:
+            <img 
+            src={'http://localhost:8000/uploads/' + product.image_url} 
+            alt={product.name} 
+            className="pos-image"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = '/placeholder.png';
+            }}
+          />}
             <div className="pos-info">
               <div className="pos-header">
                 <div className="pos-category">
@@ -239,6 +340,34 @@ const Product = () => {
                 <h3>{product.name}</h3>
                 <p className="pos-description">{product.description}</p>
               </div>
+<<<<<<< HEAD
+              <h3>{product.name}</h3>
+              <p className="pos-description">{product.description}</p>
+              <div className="pos-tags">
+              {product.tags?.map(tag => (
+                    <button
+                      key={tag._id}
+                      className={`pos-tag-button ${selectedTag === tag._id ? 'active' : ''}`}
+                      onClick={() => setSelectedTag(tag._id)}
+                      style={{
+                        backgroundColor: selectedTag === tag._id ? getTagColor(tag.name) : 'transparent',
+                        color: selectedTag === tag._id ? 'white' : getTagColor(tag.name),
+                        borderColor: getTagColor(tag.name)
+                      }}
+                    >
+                      {getTagIcon(tag.name)} {tag.name}
+                    </button>
+                  ))}
+              </div>
+              <div className="pos-footer">
+                <span className="pos-price">{formatRupiah(product.price)}</span>
+                <button 
+                  className="pos-add-button"
+                  onClick={() => handleAddToCart(product)}
+                >
+                  <FaShoppingCart /> Add
+                </button>
+=======
               <div className="pos-content">
                 <div className="pos-footer">
                   <span className="pos-price">{formatRupiah(product.price)}</span>
@@ -249,6 +378,7 @@ const Product = () => {
                     <FaShoppingCart /> Add
                   </button>
                 </div>
+>>>>>>> d257d39deeb42d1c9e935abf3aa105493c70b0ef
               </div>
             </div>
           </div>

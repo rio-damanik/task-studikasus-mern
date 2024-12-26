@@ -13,40 +13,22 @@ const orderSchema = Schema({
         type: Number,
         default: 0
     },
+    customer_name: {
+        type: String,
+        maxlength: [255, 'Customer name cannot exceed 255 characters']
+    },
     user: {
         type: Schema.Types.ObjectId,
         ref: 'User'
     },
     delivery_address: {
-        kelurahan: {
-            type: String,
-            maxlength: [255, 'Panjang nama kelurahan maksimal 255 karakter'],
-            required: false
-        },
-        kecamatan: {
-            type: String,
-            maxlength: [255, 'Panjang nama kecamatan maksimal 255 karakter'],
-            required: false
-        },
-        kabupaten: {
-            type: String,
-            maxlength: [255, 'Panjang nama kabupaten maksimal 255 karakter'],
-            required: false
-        },
-        provinsi: {
-            type: String,
-            maxlength: [255, 'Panjang nama provinsi maksimal 255 karakter'],
-            required: false
-        },
-        detail: {
-            type: String,
-            maxlength: [1000, 'Panjang detail alamat maksimal 1000 karakter'],
-            required: false
-        },
+        type: Schema.Types.ObjectId,
+        ref: 'DeliveryAddress'
     },
     metode_payment: {
         type: String,
         enum: ['transfer', 'tunai'],
+        required: [true, 'Payment method is required']
     },
     orderItems: [{
         type: Schema.Types.ObjectId,
@@ -55,43 +37,25 @@ const orderSchema = Schema({
 }, { timestamps: true });
 
 orderSchema.plugin(AutoIncrement, { inc_field: 'order_number' });
-// orderSchema.virtual('items_count').get(function () {
-//     return this.orderItems.reduce((total, item) => total + parseInt(item.qty), 0);
-// });
-orderSchema.pre('save', async function (next) {
-    const sub_total = this.orderItems.reduce((total, item) => total + (item.price * item.qty), 0);
-    const invoiceData = {
-        user: this.user,
-        order: this._id,
-        delivery_fee: this.delivery_fee,
-        sub_total: sub_total,
-        total: sub_total + this.delivery_fee,
-        metode_payment: this.metode_payment
-    };
 
-    if (this.delivery_address && this.delivery_address.kelurahan) {
-        invoiceData.delivery_address = {
-            kelurahan: this.delivery_address.kelurahan,
-            kecamatan: this.delivery_address.kecamatan,
-            kabupaten: this.delivery_address.kabupaten,
-            provinsi: this.delivery_address.provinsi,
-            detail: this.delivery_address.detail
-        };
+orderSchema.virtual('items_count').get(function() {
+    return this.orderItems.reduce((total, item) => total + (item.qty || 0), 0);
+});
+
+orderSchema.post('save', async function() {
+    const Invoice = require('../invoice/model');
+    const invoice = await Invoice.findOne({ order: this._id });
+    
+    if (!invoice) {
+        await Invoice.create({
+            user: this.user,
+            order: this._id,
+            sub_total: this.orderItems.reduce((sum, item) => sum + (item.price * item.qty), 0),
+            delivery_fee: this.delivery_fee,
+            total: this.orderItems.reduce((sum, item) => sum + (item.price * item.qty), 0) + this.delivery_fee,
+            delivery_address: this.delivery_address
+        });
     }
-
-    const invoice = new Invoice(invoiceData);
-    await invoice.save();
-    next();
-})
-
-// pada middlware pre baru ditambahkan next() untuk melanjutkan ke proses selanjutnya
-orderSchema.post('findOneAndUpdate', async function () {
-    // this condition untuk mencari invoice berdasarkan order yg diupdate, this update untuk mendapatkan status order yg diupdate
-    await Invoice.findOneAndUpdate({ order: this._conditions._id }, { $set: { payment_status: this._update.$set.status } });
-    // console.log(invoice)
-    // // console.log(this._conditions)
-    // console.log(this._update)
-    // console.log(this._update.$set.status)
-})
+});
 
 module.exports = model('Order', orderSchema);

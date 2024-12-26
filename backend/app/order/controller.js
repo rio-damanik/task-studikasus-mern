@@ -2,10 +2,17 @@ const Order = require('./model');
 const OrderItem = require('../orderItem/model');
 const CartItem = require('../cartItem/model');
 const DeliveryAddress = require('../deliveryAddress/model');
+const Product = require('../product/model');
+const Invoice = require('../invoice/model');
 
 const store = async (req, res, next) => {
     try {
-        const { delivery_address, metode_payment, delivery_fee = 0, customer_name } = req.body;
+        let { delivery_address, metode_payment, delivery_fee = 0, customer_name, cart_items } = req.body;
+
+        if (typeof cart_items === 'string') {
+            cart_items = JSON.parse(cart_items);
+        }
+        
         if (!metode_payment) {
             return res.json({
                 error: 1,
@@ -13,32 +20,57 @@ const store = async (req, res, next) => {
             });
         }
 
-        const cart = await CartItem.find({ user: req.user._id }).populate('product');
-        if (!cart || cart.length === 0) {
+        if (!cart_items || cart_items.length === 0) {
             return res.json({
                 error: 1,
                 message: 'Cart is empty'
             });
         }
 
-        let orderData = {
-            delivery_fee,
-            metode_payment,
-            customer_name,
-            user: req.user._id,
-            status: 'waiting payment'
-        };
+        // Get products for cart items
+        const productIds = cart_items.map(item => item.product);
+        const products = await Product.find({ _id: { $in: productIds } });
 
-        // If delivery address is provided, add delivery address details
+        if (products.length !== cart_items.length) {
+            return res.json({
+                error: 1,
+                message: 'Some products not found'
+            });
+        }
+
+        // Calculate subtotal
+        let sub_total = 0;
+        const orderItemsData = cart_items.map(item => {
+            const product = products.find(p => p._id.toString() === item.product.toString());
+            if (!product) {
+                throw new Error(`Product not found: ${item.product}`);
+            }
+            const qty = parseInt(item.qty);
+            const price = parseFloat(product.price);
+            sub_total += qty * price;
+            
+            return {
+                qty,
+                price,
+                name: product.name,
+                product: product._id,
+                user: req.user._id
+            };
+        });
+
+        // Get delivery address if provided
+        let deliveryAddressData = null;
         if (delivery_address) {
             const address = await DeliveryAddress.findById(delivery_address);
+           
+            
             if (!address) {
                 return res.json({
                     error: 1,
                     message: 'Delivery address not found'
                 });
             }
-            orderData.delivery_address = {
+            deliveryAddressData = {
                 kelurahan: address.kelurahan,
                 kecamatan: address.kecamatan,
                 kabupaten: address.kabupaten,
@@ -48,95 +80,123 @@ const store = async (req, res, next) => {
         }
 
         // Create order
-        const order = new Order(orderData);
+        const order = await Order.create({
+            delivery_fee: parseFloat(delivery_fee),
+            delivery_address,
+            metode_payment,
+            customer_name: customer_name || 'Guest Customer',
+            user: req.user._id,
+            status: 'waiting payment'
+        });
 
-        // Create order items
-        const orderItems = await OrderItem.insertMany(
-            cart.map(item => ({
-                name: item.product.name,
-                price: item.product.price,
-                qty: item.qty,
-                product: item.product._id,
+        // Add order ID to order items
+        const orderItems = await OrderItem.create(
+            orderItemsData.map(item => ({
+                ...item,
                 order: order._id
             }))
         );
 
-        // Add order items to order
-        order.orderItems = orderItems.map(item => item._id);
+        // Update order with order items
+        order.orderItems = Array.isArray(orderItems) ? orderItems.map(item => item._id) : [orderItems._id];
         await order.save();
 
-        // Clear cart
-        await CartItem.deleteMany({ user: req.user._id });
+        // Create invoice
+        const total = sub_total + parseFloat(delivery_fee);
+        const invoice = await Invoice.create({
+            sub_total,
+            delivery_fee: parseFloat(delivery_fee),
+            total,
+            delivery_address: deliveryAddressData,
+            user: req.user._id,
+            order: order._id,
+            metode_payment,
+            payment_status: 'waiting'
+        });
 
-        // Return populated order
+        // Clear cart
+        await CartItem.findOneAndUpdate(
+            { user: req.user._id },
+            { $set: { items: [] } },
+            { new: true }
+        );
+
+        // Fetch the complete order with populated fields
         const populatedOrder = await Order.findById(order._id)
-            .populate('orderItems')
+            .populate({
+                path: 'orderItems',
+                populate: {
+                    path: 'product',
+                    select: 'name price'
+                }
+            })
+            .populate('delivery_address')
             .populate('user', 'full_name');
 
-        return res.json(populatedOrder);
-    } catch (error) {
-        console.error('Error in store:', error);
-        if (error.name === 'ValidationError') {
-            return res.json({
-                error: 1,
-                message: error.message,
-                fields: error.errors
-            });
-        }
-        next(error);
-    }
-}
-
-const index = async (req, res, next) => {
-    try {
-        const { limit = 10, skip = 0 } = req.query;
-        const count = await Order.find({ user: req.user._id }).countDocuments();
-        const orders = await Order.find({ user: req.user._id })
-            .limit(parseInt(limit))
-            .skip(parseInt(skip))
-            .populate('orderItems')
-            .sort({ createdAt: -1 });
         return res.json({
-            data: orders,
-            count,
-            limit: parseInt(limit),
-            skip: parseInt(skip)
+            error: 0,
+            message: 'Order created successfully',
+            data: populatedOrder
         });
-    } catch (error) {
-        if (error && error.name === 'ValidationError') {
+
+    } catch (err) {
+        console.error('Order creation error:', err);
+        if (err && err.name === 'ValidationError') {
             return res.json({
                 error: 1,
                 message: err.message,
                 fields: err.errors
             });
         }
-        next(error);
+        return res.json({
+            error: 1,
+            message: err.message || 'Failed to create order'
+        });
+    }
+};
+
+const index = async (req, res, next) => {
+    try {
+        const { skip = 0, limit = 10 } = req.query;
+        const orders = await Order.find({ user: req.user._id })
+            .skip(parseInt(skip))
+            .limit(parseInt(limit))
+            .populate('orderItems')
+            .populate('delivery_address')
+            .sort('-createdAt');
+
+        const count = await Order.find({ user: req.user._id }).countDocuments();
+
+        return res.json({
+            error: 0,
+            message: 'Success',
+            data: { orders, count }
+        });
+    } catch (err) {
+        if (err && err.name === 'ValidationError') {
+            return res.json({
+                error: 1,
+                message: err.message,
+                fields: err.errors
+            });
+        }
+        next(err);
     }
 };
 
 const update = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const order = await Order.findOneAndUpdate({ _id: id }, { $set: { status: 'paid' } }, { new: true });
-        return res.json(order);
-    } catch (error) {
-        if (error && error.name === 'ValidationError') {
-            return res.json({
-                error: 1,
-                message: error.message,
-                fields: error.errors
-            });
-        }
-        next(error);
-    }
-}
+        const { status } = req.body;
 
-const show = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        const order = await Order.findOne({ _id: id })
-            .populate('orderItems')
-            .populate('user', 'full_name');
+        const order = await Order.findOneAndUpdate(
+            { _id: id },
+            { status },
+            { new: true }
+        )
+        .populate('orderItems')
+        .populate('delivery_address')
+        .populate('user', 'full_name');
 
         if (!order) {
             return res.json({
@@ -145,7 +205,43 @@ const show = async (req, res, next) => {
             });
         }
 
-        return res.json(order);
+        return res.json({
+            error: 0,
+            message: 'Order updated successfully',
+            data: order
+        });
+    } catch (err) {
+        if (err && err.name === 'ValidationError') {
+            return res.json({
+                error: 1,
+                message: err.message,
+                fields: err.errors
+            });
+        }
+        next(err);
+    }
+};
+
+const show = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const order = await Order.findOne({ _id: id })
+            .populate('orderItems')
+            .populate('user', 'full_name')
+            .populate('delivery_address');
+
+        if (!order) {
+            return res.json({
+                error: 1,
+                message: 'Order not found'
+            });
+        }
+
+        return res.json({
+            error: 0,
+            message: 'Success',
+            data: order
+        });
     } catch (error) {
         if (error && error.name === 'ValidationError') {
             return res.json({

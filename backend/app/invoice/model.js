@@ -17,6 +17,10 @@ const invoiceSchema = Schema({
         type: Schema.Types.ObjectId,
         ref: 'User'
     },
+    order: {
+        type: Schema.Types.ObjectId,
+        ref: 'Order'
+    },
     metode_payment: {
         type: String,
         enum: ['transfer', 'tunai'],
@@ -25,37 +29,33 @@ const invoiceSchema = Schema({
         kelurahan: {
             type: String,
             maxlength: [255, 'Panjang nama kelurahan maksimal 255 karakter'],
-            required: [true, 'Nama kelurahan harus diisi']
+            // required: function() { return this.delivery_fee > 0; }
         },
         kecamatan: {
             type: String,
             maxlength: [255, 'Panjang nama kecamatan maksimal 255 karakter'],
-            required: [true, 'Nama kecamatan harus diisi']
+            // required: function() { return this.delivery_fee > 0; }
         },
         kabupaten: {
             type: String,
             maxlength: [255, 'Panjang nama kabupaten maksimal 255 karakter'],
-            required: [true, 'Nama kabupaten harus diisi']
+            // required: function() { return this.delivery_fee > 0; }
         },
         provinsi: {
             type: String,
             maxlength: [255, 'Panjang nama provinsi maksimal 255 karakter'],
-            required: [true, 'Nama provinsi harus diisi']
+            // required: function() { return this.delivery_fee > 0; }
         },
         detail: {
             type: String,
             maxlength: [1000, 'Panjang detail alamat maksimal 1000 karakter'],
-            required: [true, 'Detail alamat harus diisi']
+            // required: function() { return this.delivery_fee > 0; }
         },
     },
     payment_status: {
         type: String,
-        enum: ['waiting payment', 'paid'],
-        default: 'waiting payment'
-    },
-    order: {
-        type: Schema.Types.ObjectId,
-        ref: 'Order'
+        enum: ['waiting', 'paid'],
+        default: 'waiting'
     }
 }, { timestamps: true });
 
