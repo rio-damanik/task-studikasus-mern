@@ -5,6 +5,7 @@ import { CartProvider } from "./context/CartContext";
 import { AuthProvider } from "./context/AuthContext";
 import { router } from './router';
 import "./index.css";
+import './styles/print.css';
 import reportWebVitals from "./reportWebVitals";
 
 const container = document.getElementById('root');

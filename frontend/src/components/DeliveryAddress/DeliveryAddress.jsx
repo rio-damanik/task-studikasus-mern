@@ -21,7 +21,7 @@ const DeliveryAddress = ({ isModal, onClose, onSelect, selectedId }) => {
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
-    nama: '',
+    name: '',
     detail: '',
     kelurahan: '',
     kecamatan: '',
@@ -43,7 +43,7 @@ const DeliveryAddress = ({ isModal, onClose, onSelect, selectedId }) => {
   };
 
   const validateForm = () => {
-    if (!form.nama.trim()) return 'Name is required';
+    if (!form.name.trim()) return 'Name is required';
     if (!form.detail.trim()) return 'Address detail is required';
     if (!form.kelurahan.trim()) return 'Kelurahan is required';
     if (!form.kecamatan.trim()) return 'Kecamatan is required';
@@ -87,7 +87,7 @@ const DeliveryAddress = ({ isModal, onClose, onSelect, selectedId }) => {
   const handleEdit = (address) => {
     setEditingId(address._id);
     setForm({
-      nama: address.nama,
+      name: address.name,
       detail: address.detail,
       kelurahan: address.kelurahan,
       kecamatan: address.kecamatan,
@@ -111,7 +111,7 @@ const DeliveryAddress = ({ isModal, onClose, onSelect, selectedId }) => {
 
   const resetForm = () => {
     setForm({
-      nama: '',
+      name: '',
       detail: '',
       kelurahan: '',
       kecamatan: '',
@@ -162,8 +162,8 @@ const DeliveryAddress = ({ isModal, onClose, onSelect, selectedId }) => {
           </label>
           <input
             type="text"
-            name="nama"
-            value={form.nama}
+            name="name"
+            value={form.name}
             onChange={handleInputChange}
             placeholder="Enter recipient name"
           />
@@ -295,7 +295,7 @@ const DeliveryAddress = ({ isModal, onClose, onSelect, selectedId }) => {
             >
               <div className="address-card-header">
                 <FaMapMarkerAlt className="location-icon" />
-                <h3>{address.nama}</h3>
+                <h3>{address.name}</h3>
               </div>
               <div className="address-card-content">
                 <p className="address-detail">{address.detail}</p>

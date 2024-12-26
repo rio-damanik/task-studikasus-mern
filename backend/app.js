@@ -14,6 +14,7 @@ const authRoute = require('./app/auth/routes');
 const cartRoute = require('./app/cart/routes');
 const orderRoute = require('./app/order/routes');
 const invoiceRoute = require('./app/invoice/routes');
+const usersRoute = require('./app/user/routes');
 const db = require('./database/index');
 var app = express();
 
@@ -39,7 +40,7 @@ app.use('/api', deliveryAddressRoute)
 app.use('/api', cartRoute)
 app.use('/api', orderRoute)
 app.use('/api', invoiceRoute)
-
+app.use('/api/users', usersRoute)
 
 //  home
 app.use('/', (req, res) => {

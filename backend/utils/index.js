@@ -40,6 +40,7 @@ const policyFor = (user) => {
     } else {
         policies['guest'](user, builder);
     }
+    console.log('Policy rules:', builder.rules);
     return new Ability(builder.rules);
 }
 

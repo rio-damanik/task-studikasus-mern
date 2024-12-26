@@ -2,6 +2,10 @@ const mongoose = require('mongoose');
 const { model, Schema } = mongoose;
 
 const tagSchema = new Schema({
+    _id: {
+        type: String,
+        required: true
+    },
     name: {
         type: String,
         minlength: [3, 'Panjang nama tag minimal 3 karakter'],
