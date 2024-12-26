@@ -12,11 +12,7 @@ const tags = [
   { _id: "656c0eb807d3e9dbe63afa91", name: "Populer" },
   { _id: "656c0eb807d3e9dbe63afa93", name: "Dingin" },
   { _id: "656c0eb807d3e9dbe63afa94", name: "Vegetarian" },
-  { _id: "656c0eb807d3e9dbe63afa95", name: "Halal" },
-  { _id: "656c0eb807d3e9dbe63afa97", name: "Goreng" },
-  { _id: "656c0eb807d3e9dbe63afa98", name: "Berkuah" },
-  { _id: "656c0eb807d3e9dbe63afa99", name: "Bakar" },
-  { _id: "656c0eb807d3e9dbe63afa9a", name: "Seafood" }
+  { _id: "656c0eb807d3e9dbe63afa95", name: "Halal" }
 ];
 
 // Categories data
@@ -24,17 +20,11 @@ const categories = [
   {
     _id: "656c0eb807d3e9dbe63afa89",
     name: "Makanan",
-    tags: ["656c0eb807d3e9dbe63afa90", "656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa94", "656c0eb807d3e9dbe63afa95", 
-           "656c0eb807d3e9dbe63afa97", "656c0eb807d3e9dbe63afa98", "656c0eb807d3e9dbe63afa99", "656c0eb807d3e9dbe63afa9a"]
+    tags: ["656c0eb807d3e9dbe63afa90", "656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa94", "656c0eb807d3e9dbe63afa95"]
   },
   {
     _id: "656c0eb807d3e9dbe63afa92",
     name: "Minuman",
-    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa93"]
-  },
-  {
-    _id: "656c0eb807d3e9dbe63afa96",
-    name: "Dessert",
     tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa93"]
   }
 ];
@@ -66,46 +56,29 @@ const users = [
 
 // Products data
 const products = [
-  // Kategori Makanan
   {
     name: "Nasi Goreng Spesial",
     description: "Nasi goreng dengan telur, ayam, udang, dan sayuran segar",
-    price: 25000,
+    price: 35000,
     image_url: "https://images.unsplash.com/photo-1512058564366-18510be2db19?w=500",
     category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa97", "656c0eb807d3e9dbe63afa95"]
+    tags: ["656c0eb807d3e9dbe63afa90", "656c0eb807d3e9dbe63afa91"]
   },
   {
     name: "Mie Goreng Seafood",
-    description: "Mie goreng dengan udang, cumi, dan sayuran",
-    price: 28000,
+    description: "Mie goreng dengan campuran seafood segar dan sayuran",
+    price: 40000,
     image_url: "https://images.unsplash.com/photo-1585032226651-759b368d7246?w=500",
     category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa97", "656c0eb807d3e9dbe63afa9a", "656c0eb807d3e9dbe63afa95"]
+    tags: ["656c0eb807d3e9dbe63afa90"]
   },
   {
-    name: "Sop Buntut",
-    description: "Sop buntut sapi dengan kuah bening dan sayuran segar",
-    price: 45000,
-    image_url: "/images/products/sop-buntut.png",
-    category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa98", "656c0eb807d3e9dbe63afa95"]
-  },
-  {
-    name: "Ikan Bakar Kecap",
-    description: "Ikan gurame bakar dengan bumbu kecap special",
-    price: 65000,
-    image_url: "/images/products/ikan-bakar.png",
-    category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa99", "656c0eb807d3e9dbe63afa9a", "656c0eb807d3e9dbe63afa95"]
-  },
-  {
-    name: "Ayam Goreng Crispy",
-    description: "Ayam goreng crispy dengan tepung special",
-    price: 30000,
-    image_url: "/images/products/ayam-crispy.png",
-    category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa97", "656c0eb807d3e9dbe63afa95"]
+    name: "Es Teh Manis",
+    description: "Teh manis segar dengan es batu",
+    price: 8000,
+    image_url: "https://images.unsplash.com/photo-1499638673689-79a0b5115d87?w=500",
+    category: "656c0eb807d3e9dbe63afa92",
+    tags: ["656c0eb807d3e9dbe63afa93"]
   },
   {
     name: "Ayam Bakar",
@@ -113,7 +86,15 @@ const products = [
     price: 45000,
     image_url: "https://images.unsplash.com/photo-1633237308525-cd587cf71926?w=500",
     category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa90", "656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa99", "656c0eb807d3e9dbe63afa95"]
+    tags: ["656c0eb807d3e9dbe63afa90", "656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa95"]
+  },
+  {
+    name: "Jus Alpukat",
+    description: "Jus alpukat segar dengan susu dan sirup coklat",
+    price: 15000,
+    image_url: "https://images.unsplash.com/photo-1623065422902-30a2d299bbe4?w=500",
+    category: "656c0eb807d3e9dbe63afa92",
+    tags: ["656c0eb807d3e9dbe63afa93"]
   },
   {
     name: "Gado-gado",
@@ -125,11 +106,11 @@ const products = [
   },
   {
     name: "Sate Ayam",
-    description: "Sate ayam dengan bumbu kacang special",
+    description: "Sate ayam dengan bumbu kacang dan lontong",
     price: 35000,
     image_url: "https://images.unsplash.com/photo-1529563021893-cc83c992d75d?w=500",
     category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa99", "656c0eb807d3e9dbe63afa95"]
+    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa95"]
   },
   {
     name: "Rendang Daging",
@@ -137,23 +118,31 @@ const products = [
     price: 50000,
     image_url: "https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=500",
     category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa90", "656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa95"]
+    tags: ["656c0eb807d3e9dbe63afa90", "656c0eb807d3e9dbe63afa91"]
   },
   {
     name: "Soto Ayam",
-    description: "Soto ayam dengan kuah bening dan ayam suwir",
-    price: 25000,
-    image_url: "https://images.unsplash.com/photo-1547592180-85f173990554?w=500",
+    description: "Sup ayam tradisional dengan bumbu kuning dan pelengkap",
+    price: 30000,
+    image_url: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=500",
     category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa98", "656c0eb807d3e9dbe63afa95"]
+    tags: ["656c0eb807d3e9dbe63afa95"]
   },
   {
     name: "Bakso Spesial",
-    description: "Bakso daging sapi dengan mie dan pangsit",
-    price: 30000,
-    image_url: "https://images.unsplash.com/photo-1591123120675-6f7f1aae0e5b?w=500",
+    description: "Bakso daging sapi dengan mie dan kuah kaldu",
+    price: 35000,
+    image_url: "https://images.unsplash.com/photo-1590301157890-4810ed352733?w=500",
     category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa98", "656c0eb807d3e9dbe63afa95"]
+    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa95"]
+  },
+  {
+    name: "Es Jeruk",
+    description: "Jus jeruk segar dengan es batu",
+    price: 12000,
+    image_url: "https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?w=500",
+    category: "656c0eb807d3e9dbe63afa92",
+    tags: ["656c0eb807d3e9dbe63afa93"]
   },
   {
     name: "Capcay Seafood",
@@ -161,73 +150,7 @@ const products = [
     price: 40000,
     image_url: "https://images.unsplash.com/photo-1512058533999-a3d718f1768f?w=500",
     category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa94", "656c0eb807d3e9dbe63afa9a", "656c0eb807d3e9dbe63afa95"]
-  },
-  {
-    name: "Ayam Geprek",
-    description: "Ayam goreng tepung yang digeprek dengan sambal pedas",
-    price: 28000,
-    image_url: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=500",
-    category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa90", "656c0eb807d3e9dbe63afa91"]
-  },
-  {
-    name: "Nasi Uduk Komplit",
-    description: "Nasi uduk dengan ayam goreng, tempe, dan sambal",
-    price: 28000,
-    image_url: "https://images.unsplash.com/photo-1512058533999-a3d718f1768f?w=500",
-    category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa95"]
-  },
-  {
-    name: "Nasi Campur Bali",
-    description: "Nasi dengan berbagai lauk khas Bali",
-    price: 38000,
-    image_url: "https://images.unsplash.com/photo-1563245372-f21724e3856d?w=500",
-    category: "656c0eb807d3e9dbe63afa89",
-    tags: ["656c0eb807d3e9dbe63afa90", "656c0eb807d3e9dbe63afa95"]
-  },
-
-  // Kategori Minuman
-  {
-    name: "Es Teh Manis",
-    description: "Teh manis dingin yang menyegarkan",
-    price: 8000,
-    image_url: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=500",
-    category: "656c0eb807d3e9dbe63afa92",
-    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa93"]
-  },
-  {
-    name: "Thai Tea",
-    description: "Thai tea dengan susu segar",
-    price: 15000,
-    image_url: "https://images.unsplash.com/photo-1558857563-b371033873b8?w=500",
-    category: "656c0eb807d3e9dbe63afa92",
-    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa93"]
-  },
-  {
-    name: "Es Jeruk",
-    description: "Jeruk segar yang menyegarkan",
-    price: 10000,
-    image_url: "https://images.unsplash.com/photo-1587015566802-5dc157c901cf?w=500",
-    category: "656c0eb807d3e9dbe63afa92",
-    tags: ["656c0eb807d3e9dbe63afa93"]
-  },
-  {
-    name: "Es Kopi Susu",
-    description: "Kopi susu dengan gula aren",
-    price: 18000,
-    image_url: "https://images.unsplash.com/photo-1589396575653-c09c794ff6a6?w=500",
-    category: "656c0eb807d3e9dbe63afa92",
-    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa93"]
-  },
-  {
-    name: "Jus Alpukat",
-    description: "Jus alpukat segar dengan susu",
-    price: 15000,
-    image_url: "/images/products/jus-alpukat.png",
-    category: "656c0eb807d3e9dbe63afa92",
-    tags: ["656c0eb807d3e9dbe63afa93"]
+    tags: ["656c0eb807d3e9dbe63afa94"]
   },
   {
     name: "Es Campur",
@@ -238,12 +161,28 @@ const products = [
     tags: ["656c0eb807d3e9dbe63afa93"]
   },
   {
-    name: "Lemon Tea",
-    description: "Teh dengan perasan lemon segar dan es",
-    price: 12000,
-    image_url: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=500",
+    name: "Ayam Geprek",
+    description: "Ayam goreng tepung yang digeprek dengan sambal pedas",
+    price: 28000,
+    image_url: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=500",
+    category: "656c0eb807d3e9dbe63afa89",
+    tags: ["656c0eb807d3e9dbe63afa90", "656c0eb807d3e9dbe63afa91"]
+  },
+  {
+    name: "Es Kopi Susu",
+    description: "Kopi susu dengan gula aren dan es batu",
+    price: 15000,
+    image_url: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=500",
     category: "656c0eb807d3e9dbe63afa92",
     tags: ["656c0eb807d3e9dbe63afa93"]
+  },
+  {
+    name: "Mie Kuah Spesial",
+    description: "Mie dengan kuah kaldu, bakso, dan pelengkap",
+    price: 32000,
+    image_url: "https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=500",
+    category: "656c0eb807d3e9dbe63afa89",
+    tags: ["656c0eb807d3e9dbe63afa91"]
   },
   {
     name: "Smoothie Buah",
@@ -253,39 +192,53 @@ const products = [
     category: "656c0eb807d3e9dbe63afa92",
     tags: ["656c0eb807d3e9dbe63afa93"]
   },
-
-  // Kategori Dessert
   {
-    name: "Classic Chocolate Pudding",
-    description: "Pudding coklat lembut dengan saus vanilla",
-    price: 20000,
-    image_url: "https://images.unsplash.com/photo-1539252554453-80ab65ce3586?w=500",
-    category: "656c0eb807d3e9dbe63afa96",
-    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa93"]
+    name: "Nasi Uduk Komplit",
+    description: "Nasi uduk dengan ayam goreng, tempe, dan sambal",
+    price: 28000,
+    image_url: "https://images.unsplash.com/photo-1512058533999-a3d718f1768f?w=500",
+    category: "656c0eb807d3e9dbe63afa89",
+    tags: ["656c0eb807d3e9dbe63afa95"]
   },
   {
-    name: "Vanilla Ice Cream",
-    description: "Es krim vanilla lembut dengan topping",
-    price: 15000,
-    image_url: "https://images.unsplash.com/photo-1570197571499-166b36435e9f?w=500",
-    category: "656c0eb807d3e9dbe63afa96",
+    name: "Lemon Tea",
+    description: "Teh dengan perasan lemon segar dan es",
+    price: 12000,
+    image_url: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=500",
+    category: "656c0eb807d3e9dbe63afa92",
     tags: ["656c0eb807d3e9dbe63afa93"]
   },
   {
-    name: "Strawberry Ice Cream",
-    description: "Fresh strawberry ice cream made with real fruit",
-    price: 22000,
-    image_url: "/images/products/ice-cream-strawberry.png",
-    category: "656c0eb807d3e9dbe63afa96",
+    name: "Ikan Bakar",
+    description: "Ikan bakar dengan sambal dan lalapan",
+    price: 45000,
+    image_url: "https://images.unsplash.com/photo-1580476262798-bddd9f4b7369?w=500",
+    category: "656c0eb807d3e9dbe63afa89",
+    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa95"]
+  },
+  {
+    name: "Sop Buntut",
+    description: "Sop buntut sapi dengan kuah bening dan sambal",
+    price: 55000,
+    image_url: "https://images.unsplash.com/photo-1547928576-b822bc410bdf?w=500",
+    category: "656c0eb807d3e9dbe63afa89",
+    tags: ["656c0eb807d3e9dbe63afa91", "656c0eb807d3e9dbe63afa95"]
+  },
+  {
+    name: "Thai Tea",
+    description: "Teh Thailand dengan susu dan boba",
+    price: 18000,
+    image_url: "https://images.unsplash.com/photo-1558857563-b371033873b8?w=500",
+    category: "656c0eb807d3e9dbe63afa92",
     tags: ["656c0eb807d3e9dbe63afa93"]
   },
   {
-    name: "Caramel Pudding",
-    description: "Classic caramel pudding with smooth texture",
-    price: 23000,
-    image_url: "/images/products/pudding-caramel.png",
-    category: "656c0eb807d3e9dbe63afa96",
-    tags: ["656c0eb807d3e9dbe63afa91"]
+    name: "Nasi Campur Bali",
+    description: "Nasi dengan berbagai lauk khas Bali",
+    price: 38000,
+    image_url: "https://images.unsplash.com/photo-1563245372-f21724e3856d?w=500",
+    category: "656c0eb807d3e9dbe63afa89",
+    tags: ["656c0eb807d3e9dbe63afa90", "656c0eb807d3e9dbe63afa95"]
   }
 ];  
 
